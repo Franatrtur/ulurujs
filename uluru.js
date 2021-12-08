@@ -285,8 +285,8 @@ simple
 
 					if(this.domac){
 
-						this.pmac[i & 3] += ptw ^ this.xstate[i] // i & 3 is the same as i % 4
-						this.cmac[i & 3] += ctw ^ this.xstate[i]
+						this.pmac[i & 3] ^= ptw + this.xstate[i] // i & 3 is the same as i % 4
+						this.cmac[i & 3] ^= ctw + this.xstate[i]
 
 						this.QR(this.pmac, i & 3, (i + 1) & 3, (i + 2) & 3, (i + 3) & 3)
 						this.QR(this.cmac, i & 3, (i + 1) & 3, (i + 2) & 3, (i + 3) & 3)
@@ -597,7 +597,7 @@ simple
 
 	//export everything
 	return {
-		version: "1.0",
+		version: "1.1",
 		author: "Franatrtur",
 		enc: {
 			Hex,
