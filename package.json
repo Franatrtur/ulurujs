@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "a lightweight cryptographic library designed to be simple to use",
   "main": "uluru.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Franatrtur/ulurucrypto.git"
+  },
   "directories": {
     "test": "test"
   },
