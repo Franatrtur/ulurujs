@@ -1,0 +1,23 @@
+{
+  "name": "uluru-crypto",
+  "version": "1.0.0",
+  "description": "a lightweight cryptographic library designed to be simple to use",
+  "main": "uluru.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node test/test.js"
+  },
+  "keywords": [
+    "encryption",
+    "crypto",
+    "cryptography",
+    "chacha20",
+    "keccak",
+    "hash",
+    "cipher"
+  ],
+  "author": "Franatrtur",
+  "license": "MIT"
+}
