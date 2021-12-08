@@ -309,7 +309,7 @@ simple
 			this.data = new U8Arr(newlen)
 
 			this.data.set(new U8Arr(old.buffer, 0, this.sigbytes))
-			this.data.set(new U8Arr(data.buffer), this.sigbytes)
+			this.data.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength), this.sigbytes)
 
 			this.data = new U32Arr(this.data.buffer)
 			this.sigbytes += data.byteLength
@@ -438,7 +438,7 @@ simple
 			if(data.byteLength + this.sigbytes < 64){
 
 				thispadblock = new U8Arr(thispadblock.buffer)
-				thispadblock.set(new U8Arr(data.buffer), this.sigbytes)
+				thispadblock.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength), this.sigbytes)
 
 				thispadblock[thispadblock.length - 1] = 0x80
 				thispadblock[data.byteLength + this.sigbytes] ^= 0x06
@@ -456,9 +456,9 @@ simple
 				thisdata = thisdata.byteLength >= newlen ? new U8Arr(thisdata.buffer, 0, newlen) : new U8Arr(newlen)
 
 				thisdata.set(new U8Arr(thispadblock.buffer, 0, this.sigbytes))
-				thisdata.set(new U8Arr(data.buffer, 0, data.byteLength - overflow), this.sigbytes)
+				thisdata.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength - overflow), this.sigbytes)
 
-				thisdata = new U32Arr(thisdata.buffer, 0, newlen >> 2)
+				this.data = new U32Arr(thisdata.buffer, 0, newlen >> 2)
 
 				//append the overflow as a new incomplete block
 

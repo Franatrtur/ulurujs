@@ -11,7 +11,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node test/test.js"
+    "test": "node --trace-uncaught test/test"
   },
   "keywords": [
     "encryption",
