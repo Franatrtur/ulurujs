@@ -35,17 +35,12 @@ simple
 
 ;((function(pkg, pkgname){
 
-	if (typeof global != 'undefined')
-		module.exports = pkg
+	let globthis = window || global
 
-	else if (typeof globalThis != 'undefined')
-		globalThis[pkgname] = pkg
+	let package = Object.assign(typeof globthis[pkgname] == "object" ? globthis[pkgname] : (globthis[pkgname] = {}), pkg)
 
-	else if (typeof window != 'undefined')
-		window[pkgname] = pkg
-
-	else
-		throw "No global context found"
+	if (typeof module != 'undefined' && typeof module.exports != "undefined")
+		module.exports = package
 
 })((function(){
 
@@ -142,7 +137,7 @@ simple
 	const CONSTcc = new U32Arr(new Ascii().encode("expand 32-byte k").buffer) //nothing-up-my-sleeve constants
 
 	/**
-	 * a modified version of the chacha20 stream cipher
+	 * A modified version of the chacha20 stream cipher
 	 * the cipher uses the original chacha function and rounds
 	 * except that we diffuse the entropy of the key with some 8 doublerounds of column/row rounds
 	 * our nonce and counter are 32bit
@@ -340,35 +335,19 @@ simple
 	}
 
 
-	const RHOoffets = [
+	const RHOoffets = new U8Arr([
 		 0,  1, 62, 28, 27,
 		36, 44,  6, 55, 20,
 		 3, 10, 43, 25, 39,
 		41, 45, 15, 21,  8,
 		18,  2, 61, 56, 14
-	]
+	])
 
 	const RCs = new U32Arr([
 		 0x00000001, 0x00008082, 0x0000808a, 0x80008000, 0x0000808b, 0x80000001, 0x80008081, 0x00008009,
 		 0x0000008a, 0x00000088, 0x80008009, 0x8000000a, 0x8000808b, 0x0000008b, 0x00008089, 0x00008003,
 		 0x00008002, 0x00000080, 0x0000800a, 0x8000000a, 0x80008081, 0x00008080, 0x80000001, 0x80008008
 	])
-/*
-	//mod 5
-	const MOD5 = new U8Arr(
-		Array(50).fill(0).map((_, x) => x % 5)
-	)
-
-	//mod 5 times 5
-	const M5T5 = new U8Arr(
-		Array(50).fill(0).map((_, x) => (x % 5) * 5)
-	)
-
-	//divide by 5
-	const DIV5 = new U8Arr(
-		Array(50).fill(0).map((_, x) => Math.floor(x / 5))
-	)
-	*/
 
 	//keccak coordinates precomputation
 
@@ -378,9 +357,9 @@ simple
 	const XMM1 = new U8Arr(25)
 	//x y permutation
 	const XYP = new U8Arr(25)
-	//x plus 1
+	//x plus 1 - next lane
 	const XP1 = new U8Arr(25)
-	//x plus 2
+	//x plus 2 - next lane
 	const XP2 = new U8Arr(25)
 
 	let nx, ny
@@ -429,7 +408,7 @@ simple
 				theta = this.theta
 			let off, tmp
 
-			for(var round = 0; round < 22; round++){
+			for(let round = 0; round < 22; round++){
 
 				theta[0] = state[ 0] ^ state[ 1] ^ state[ 2] ^ state[ 3] ^ state[ 4]
 				theta[1] = state[ 5] ^ state[ 6] ^ state[ 7] ^ state[ 8] ^ state[ 9]
