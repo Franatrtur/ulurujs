@@ -215,14 +215,17 @@ simple
 
 		getmac(){
 
-			if(!this.pmac)
+			if(!this.domac)
 				return false
 
+			let pm = this.pmac,
+				cm = this.cmac
+
 			let mac = new U32Arr([
-				this.pmac[0] ^ this.cmac[0],
-				this.pmac[1] ^ this.cmac[1],
-				this.pmac[2] ^ this.cmac[2],
-				this.pmac[3] ^ this.cmac[3],
+				pm[0] ^ cm[0],
+				pm[1] ^ cm[1],
+				pm[2] ^ cm[2],
+				pm[3] ^ cm[3],
 			])
 
 			for(let mr = 0; mr < 4; mr++){
@@ -234,7 +237,7 @@ simple
 			}
 
 			for(let re = 0; re < 4; re++)
-				mac[re] += this.pmac[re] + this.cmac[re]
+				mac[re] += pm[re] + cm[re]
 
 			return new U8Arr(mac.buffer)
 		}
@@ -350,11 +353,55 @@ simple
 		 0x0000008a, 0x00000088, 0x80008009, 0x8000000a, 0x8000808b, 0x0000008b, 0x00008089, 0x00008003,
 		 0x00008002, 0x00000080, 0x0000800a, 0x8000000a, 0x80008081, 0x00008080, 0x80000001, 0x80008008
 	])
+/*
+	//mod 5
+	const MOD5 = new U8Arr(
+		Array(50).fill(0).map((_, x) => x % 5)
+	)
 
+	//mod 5 times 5
+	const M5T5 = new U8Arr(
+		Array(50).fill(0).map((_, x) => (x % 5) * 5)
+	)
+
+	//divide by 5
+	const DIV5 = new U8Arr(
+		Array(50).fill(0).map((_, x) => Math.floor(x / 5))
+	)
+	*/
+
+	//keccak coordinates precomputation
+
+	//x mod plus 1
+	const XMP1 = new U8Arr(25)
+	//x mod minus 1
+	const XMM1 = new U8Arr(25)
+	//x y permutation
+	const XYP = new U8Arr(25)
+	//x plus 1
+	const XP1 = new U8Arr(25)
+	//x plus 2
+	const XP2 = new U8Arr(25)
+
+	let nx, ny
+
+	//walk matrix 5x5
+	for(let n = 0; n < 25; n++){
+
+		nx = n % 5
+		ny = Math.floor(n / 5)
+
+		XMP1[n] = (nx + 1) % 5
+		XMM1[n] = (nx + 4) % 5
+		XYP[n] = ny*5 + (2*nx + 3*ny) % 5
+		XP1[n] = ((nx + 1) % 5) * 5 + ny
+		XP2[n] = ((nx + 2) % 5) * 5 + ny
+	}
 
 	/*
-	 * implementation of the keccak800 algorithm as accurately as i could (idk about the uint32array endianness, padding etc)
+	 * An implementation of the keccak800 algorithm as accurately as i could (idk about the uint32array endianness, padding etc)
 	 * smaller sibling to the keccak1600 used as sha3 (but that requires 64bit words)
+	 * built with capacity 64 bytes and 36 private state bytes
 	 */
 	class Keccak800 {
 
@@ -367,7 +414,8 @@ simple
 
 			this.data = new U32Arr(0)
 			this.padblock = new U32Arr(16)
-			this.sigbytes = 0
+			this.padsigbytes = 0
+			this.pointer = 0
 		}
 
 		constructor(){
@@ -389,19 +437,19 @@ simple
 				theta[3] = state[15] ^ state[16] ^ state[17] ^ state[18] ^ state[19]
 				theta[4] = state[20] ^ state[21] ^ state[22] ^ state[23] ^ state[24]
 
-				for(var x = 0; x < 5; x++) for(var y = 0; y < 5; y++){
+				for(let i = 0; i < 25; i++){
 
-					tmp = theta[(x + 1) % 5]
+					tmp = theta[XMP1[i]]
 
-					state[x*5 + y] ^= theta[(x + 4) % 5] ^ (tmp << 1 | tmp >>> 31)
+					state[i] ^= theta[XMM1[i]] ^ (tmp << 1 | tmp >>> 31)
 
-					off = RHOoffets[x*5 + y]
-					tmp = state[x*5 + y]
-					temp[y*5 + (2*x + 3*y) % 5] = tmp << off | tmp >>> (32 - off)
+					off = RHOoffets[i]
+					tmp = state[i]
+					temp[XYP[i]] = tmp << off | tmp >>> (32 - off)
 				}
 
-				for(var x = 0; x < 5; x++) for(var y = 0; y < 5; y++)
-					state[x*5 + y] = temp[x*5 + y] ^ ((~temp[((x + 1) % 5) * 5 + y]) & temp[((x + 2) % 5) * 5 + y])
+				for(let i = 0; i < 25; i++)
+					state[i] = temp[i] ^ (~temp[XP1[i]] & temp[XP2[i]])
 
 				state[0] ^= RCs[round]
 			}
@@ -409,14 +457,15 @@ simple
 
 		process(flush = false){
 
-			let blocks = this.data.length / 16
+			let blocks = (this.data.length - this.pointer) / 16
 
 			for(let b = 0; b < blocks; b++){
 
 				for(let w = 0; w < 16; w++)
-					this.state[w] ^= this.data[b * 16 + w]
+					this.state[w] ^= this.data[this.pointer + w]
 
 				this.keccakF(this.state)
+				this.pointer += 16
 			}
 
 			if(flush){
@@ -435,35 +484,35 @@ simple
 			let thispadblock = this.padblock
 
 			//incomplete block
-			if(data.byteLength + this.sigbytes < 64){
+			if(data.byteLength + this.padsigbytes < 64){
 
 				thispadblock = new U8Arr(thispadblock.buffer)
-				thispadblock.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength), this.sigbytes)
+				thispadblock.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength), this.padsigbytes)
 
 				thispadblock[thispadblock.length - 1] = 0x80
-				thispadblock[data.byteLength + this.sigbytes] ^= 0x06
+				thispadblock[data.byteLength + this.padsigbytes] ^= 0x06
 
 				this.padblock = new U32Arr(thispadblock.buffer)
-				this.sigbytes += data.byteLength
+				this.padsigbytes += data.byteLength
 			}
 			//new complete block
 			else{
 
-				let newlen = Math.floor((this.sigbytes + data.byteLength) / 64) * 64 // >> 6 << 6
-				let overflow = (this.sigbytes + data.byteLength) % 64
+				let newlen = Math.floor((this.padsigbytes + data.byteLength) / 64) * 64 // >> 6 << 6
+				let overflow = (this.padsigbytes + data.byteLength) % 64
 
 				//optimization, use existing data buffer we can
 				thisdata = thisdata.byteLength >= newlen ? new U8Arr(thisdata.buffer, 0, newlen) : new U8Arr(newlen)
 
-				thisdata.set(new U8Arr(thispadblock.buffer, 0, this.sigbytes))
-				thisdata.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength - overflow), this.sigbytes)
+				thisdata.set(new U8Arr(thispadblock.buffer, 0, this.padsigbytes))
+				thisdata.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength - overflow), this.padsigbytes)
 
 				this.data = new U32Arr(thisdata.buffer, 0, newlen >> 2)
 
 				//append the overflow as a new incomplete block
 
 				thispadblock.fill(0)
-				this.sigbytes = 0
+				this.padsigbytes = 0
 
 				if(overflow > 0)
 					this.append(new U8Arr(data.buffer, data.byteLength - overflow))
@@ -505,9 +554,11 @@ simple
 	}
 
 
-	//custom password-based key derivation
-	//uses reseeding of a finalized hasher
-	//simplified because we can have any output length
+	/*
+	 * Custom password-based key derivation function
+	 * uses reseeding of a finalized hasher
+	 * simplified because we can have any output length
+	 */
 	class Pbkdf {
 
 		constructor(outputbytes = 32, iterations = 1000){
@@ -540,7 +591,7 @@ simple
 	}
 
 	//functions for simplified user interaction
-	//using pbkdf with 10000 iterations to slow down the key generation
+	//using pbkdf with 1000 iterations to slow down the key generation
 
 	function encrypt(plaintext, password){
 
@@ -549,7 +600,7 @@ simple
 					crypto.getRandomValues(new U32Arr(1))[0] :
 					Math.floor(Math.random() * 0x100000000)
 
-		let key = new Pbkdf(32, 10000).compute(new Utf8().encode(password), salt)
+		let key = new Pbkdf(32, 1000).compute(new Utf8().encode(password), salt)
 
 		let encryptor = new ChaCha20(key, true, salt)
 
@@ -576,7 +627,7 @@ simple
 			throw "Incorrectly formated ciphertext"
 		}
 
-		let key = new Pbkdf(32, 10000).compute(new Utf8().encode(password), salt)
+		let key = new Pbkdf(32, 1000).compute(new Utf8().encode(password), salt)
 
 		let decryptor = new ChaCha20(key, true, salt)
 
@@ -597,7 +648,7 @@ simple
 
 	//export everything
 	return {
-		version: "1.1",
+		version: "1.2",
 		author: "Franatrtur",
 		enc: {
 			Hex,
