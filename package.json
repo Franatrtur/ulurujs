@@ -5,7 +5,7 @@
   "main": "uluru.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Franatrtur/ulurucrypto.git"
+    "url": "https://github.com/Franatrtur/ulurujs.git"
   },
   "directories": {
     "test": "test"
