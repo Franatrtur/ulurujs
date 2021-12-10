@@ -35,7 +35,7 @@ simple
 
 ;((function(pkg, pkgname){
 
-	let globthis = window || global
+	let globthis = typeof window == "object" ? window : global
 
 	let package = Object.assign(typeof globthis[pkgname] == "object" ? globthis[pkgname] : (globthis[pkgname] = {}), pkg)
 
@@ -344,9 +344,9 @@ simple
 	])
 
 	const RCs = new U32Arr([
-		 0x00000001, 0x00008082, 0x0000808a, 0x80008000, 0x0000808b, 0x80000001, 0x80008081, 0x00008009,
-		 0x0000008a, 0x00000088, 0x80008009, 0x8000000a, 0x8000808b, 0x0000008b, 0x00008089, 0x00008003,
-		 0x00008002, 0x00000080, 0x0000800a, 0x8000000a, 0x80008081, 0x00008080, 0x80000001, 0x80008008
+		0x00000001, 0x00008082, 0x0000808a, 0x80008000, 0x0000808b, 0x80000001, 0x80008081, 0x00008009,
+		0x0000008a, 0x00000088, 0x80008009, 0x8000000a, 0x8000808b, 0x0000008b, 0x00008089, 0x00008003,
+		0x00008002, 0x00000080, 0x0000800a, 0x8000000a, 0x80008081, 0x00008080, 0x80000001, 0x80008008
 	])
 
 	//keccak coordinates precomputation
@@ -459,38 +459,40 @@ simple
 		append(data){
 
 			data = typeof data == "string" ? new Utf8().encode(data) : data
+			//shortcuts for the minifier
 			let thisdata = this.data
-			let thispadblock = this.padblock
+			let padblock = this.padblock
+			let padsigbytes = this.padsigbytes
 
 			//incomplete block
-			if(data.byteLength + this.padsigbytes < 64){
+			if(data.byteLength + padsigbytes < 64){
 
-				thispadblock = new U8Arr(thispadblock.buffer)
-				thispadblock.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength), this.padsigbytes)
+				padblock = new U8Arr(padblock.buffer)
+				padblock.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength), padsigbytes)
 
-				thispadblock[thispadblock.length - 1] = 0x80
-				thispadblock[data.byteLength + this.padsigbytes] ^= 0x06
+				padblock[padblock.length - 1] = 0x80
+				padblock[data.byteLength + padsigbytes] ^= 0x06
 
-				this.padblock = new U32Arr(thispadblock.buffer)
+				this.padblock = new U32Arr(padblock.buffer)
 				this.padsigbytes += data.byteLength
 			}
 			//new complete block
 			else{
 
-				let newlen = Math.floor((this.padsigbytes + data.byteLength) / 64) * 64 // >> 6 << 6
-				let overflow = (this.padsigbytes + data.byteLength) % 64
+				let newlen = (padsigbytes + data.byteLength) >> 6 << 6 // floor(len / 64) * 64
+				let overflow = (padsigbytes + data.byteLength) % 64
 
 				//optimization, use existing data buffer we can
 				thisdata = thisdata.byteLength >= newlen ? new U8Arr(thisdata.buffer, 0, newlen) : new U8Arr(newlen)
 
-				thisdata.set(new U8Arr(thispadblock.buffer, 0, this.padsigbytes))
-				thisdata.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength - overflow), this.padsigbytes)
+				thisdata.set(new U8Arr(padblock.buffer, 0, padsigbytes))
+				thisdata.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength - overflow), padsigbytes)
 
 				this.data = new U32Arr(thisdata.buffer, 0, newlen >> 2)
 
 				//append the overflow as a new incomplete block
 
-				thispadblock.fill(0)
+				padblock.fill(0)
 				this.padsigbytes = 0
 
 				if(overflow > 0)

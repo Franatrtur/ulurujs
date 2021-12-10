@@ -1,4 +1,4 @@
-var Uluru = require("../uluru")
+var Uluru = Uluru || require("../uluru")
 
 function assert(label, condition){
 
