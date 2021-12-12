@@ -627,6 +627,384 @@ simple
 		return new Keccak800().update(new Utf8().encode(text)).finalize().toString(Hex)
 	}
 
+	const Bi = BigInt
+
+	const n1 = Bi(1)
+	const n0 = Bi(0)
+
+	const mask = bitlen => (n1 << Bi(bitlen)) - n1
+
+	function bitlen(x){
+		
+		let bits = 0 //means that for 0 the Number of bits is also 0
+		let bits32 = Bi(0x100000000)
+		let stillbigger = true
+
+		while (x){
+
+			//optimization: go through bigger chunks of 32 bits if possible
+			stillbigger &&= x > bits32
+
+			bits += stillbigger ? 32 : 1
+			x >>= Bi(stillbigger ? 32 : 1)
+		}
+
+		return bits
+	}
+
+	function modpow(base, exponent, modulus){
+
+		let result = n1
+
+		while(exponent){
+
+			if((exponent & n1) == n1)
+				result = (result * base) % modulus
+
+			exponent >>= n1
+			base = (base * base) % modulus
+		}
+
+		return result
+	}
+
+	function gcd(a, b){
+				
+		if(b > a)
+			[a, b] = [b, a]
+
+		while(true){
+
+			if(b === n0)
+				return a
+
+			a %= b
+
+			if(a === n0)
+				return b
+
+			b %= a
+		}
+	}
+
+	function randomBi(bitlength){
+
+		let result = n0
+		let rand32 = typeof crypto == "object" ? (() => crypto.getRandomValues(new U32Arr(1))[0]) : Math.random
+
+		for(var w = 0; w * 32 < bitlength; w++)
+			result = (result << Bi(32)) | Bi(rand32())
+
+		return result & mask(bitlength)
+	}
+
+	//primes smaller than 1024
+	let smallprimes = [Bi(2)]
+
+	small: for(let n = 3; n < 1024; n += 2){
+
+		for(let co = 1; co < smallprimes.length; co++)
+			if(Bi(n) % smallprimes[co] === BigInt(0))
+				continue small
+
+		smallprimes.push(Bi(n))
+	}
+	
+
+	function fermat(prime, iterations = 6){
+
+		let randsize = Math.min(16, bitlen(prime) - 1)
+		let base
+
+		while(iterations--){
+
+			base = randomBi(randsize) + Bi(5)
+
+			if(modpow(base, prime - n1, prime) != n1)
+				return false
+		}
+
+		return true
+	}
+
+	function millerrabin(prime, iterations = 6){
+
+		let s = n0, d = prime - n1
+		let randsize = Math.min(16, bitlen(prime) - 1)
+
+		while(!((d & n1) != n1)){
+
+			d >>= n1
+			s++
+		}
+
+		let a, x
+		let cant1 = n1, cant2 = prime - n1
+
+		iter: while(iterations--){
+
+			a = randomBi(randsize) + Bi(5)
+			x = modpow(a, d, prime)
+
+			if(x == cant1 || x == cant2)
+				continue iter
+
+			for(let i = n0, l = s - n1; i < l; i++){
+
+				x = modpow(x, Bi(2), prime)
+
+				if(x == cant1)
+					return false
+
+				if(x == cant2)
+					continue iter
+			}
+
+			return false
+		}
+
+		return true
+	}
+
+	function isprime(prime, iterations = 6){
+
+		for(let i = 0, l = smallprimes.length; i < l; i++)
+			if(prime % smallprimes[i] == n0)
+				return prime == smallprimes[i]
+
+		return millerrabin(prime, iterations) && fermat(prime, iterations)
+	}
+
+	function prime(bitlength, iterations = 6, attempts = 100000){
+
+		let candidate
+
+		for(let i = 0; i < attempts; i++){
+
+			candidate = randomBi(bitlength) | n1 | (n1 << Bi(bitlength - 1))
+
+			if(isprime(candidate, iterations))
+				return candidate
+		}
+
+		throw "Cannot find a prime"
+	}
+
+	//code design from: https://www.geeksforgeeks.org/multiplicative-inverse-under-modulo-m/#tablist3-tab7
+	function modinv(int, modulus){ //int != 1
+
+		let mod0 = modulus
+		let y = n0, x = n1
+		let quot, temp
+	 
+		while(int > 1){
+
+			quot = int / modulus
+			temp = modulus
+
+			//as euclids algorigm
+			modulus = int % modulus
+			int = temp
+			temp = y
+
+			y = x - quot * y
+			x = temp
+		}
+	 
+		return x < 0 ? x + mod0 : x
+	}
+
+	function buffviewtobi(bufferview){
+
+		return Bi("0x" + new Hex().decode(
+			new U8Arr(bufferview.buffer, bufferview.byteOffset || 0, bufferview.byteLength || 0)
+		))
+	}
+
+	function bitobuffview(bigint){
+
+		let stred = bigint.toString(16)
+		return new Hex().encode((stred.length % 2 == 1 ? "0" : "") + stred)
+	}
+
+	function merge(...bufferviews){
+
+		let len = 0
+		for(let i = 0; i < bufferviews.length; i++)
+			len += bufferviews[i].byteLength
+
+		let result = new Uint8Array(len)
+		let pointer = 0
+		for(let i = 0; i < bufferviews.length; i++){
+
+			result.set(new U8Arr(bufferviews[i].buffer, bufferviews[i].byteOffset, bufferviews[i].byteLength), pointer)
+			pointer += bufferviews[i].byteLength
+		}
+
+		return result
+	}
+
+	const SEEDlen = 12
+	const HASHlen = 16
+	const HDRlen = SEEDlen + HASHlen + 4
+
+	class OAEP {
+
+		pad(data, len){
+
+			let padxdata = new U8Arr(len - HDRlen)
+			padxdata.set(data)
+
+			let datalen = new U32Arr([data.byteLength])
+			let seed = crypto.getRandomValues(new U8Arr(SEEDlen))
+			let hash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen).hash
+
+			let header = merge(datalen, seed, hash)
+
+			let mask = new Keccak800().update(header).finalize(len - HDRlen).hash
+			for(let m0 = 0; m0 < len - HDRlen; m0++)
+				padxdata[m0] ^= mask[m0]
+
+			mask = new Keccak800().update(padxdata).finalize(HDRlen).hash
+			for(let m1 = 0; m1 < HDRlen; m1++)
+				header[m1] ^= mask[m1]
+
+			return merge(header, padxdata)
+		}
+
+		unpad(data){
+
+			let len = data.byteLength
+
+			let header = new U8Arr(data.buffer, 0, HDRlen).slice()
+			let padxdata = new U8Arr(data.buffer, HDRlen).slice()
+
+			let mask = new Keccak800().update(padxdata).finalize(HDRlen).hash
+			for(let m1 = 0; m1 < HDRlen; m1++)
+				header[m1] ^= mask[m1]
+
+			mask = new Keccak800().update(header).finalize(len - HDRlen).hash
+			for(let m0 = 0; m0 < len - HDRlen; m0++)
+				padxdata[m0] ^= mask[m0]
+
+			let datalen = new U32Arr(header.buffer, 0, 1)
+			let seed = new U8Arr(header.buffer, 4, SEEDlen)
+			let hash = new U8Arr(header.buffer, 4 + SEEDlen, HASHlen)
+
+			let rehash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen).hash
+			if(rehash.join(",") != hash.join(","))
+				throw "OAEP invalid padding hash"
+
+			return new U8Arr(padxdata.buffer, 0, datalen[0])
+		}
+
+	}
+
+
+	class RSAKey {
+
+		static fromBufferViews(bufferview1, bufferview2){
+
+			return new this(buffviewtobi(bufferview1), buffviewtobi(bufferview2))
+		}
+
+		static fromString(str){
+
+			let splitted = str.split("<")[1].split(">")[0].split("|")
+			return this.fromBufferView(new Base64().encode(splitted[0]), new Base64().encode(splitted[1]))
+		}
+
+		constructor(exponent, mod){
+
+			this.E = Bi(exponent) //private/public exponent
+			this.M = Bi(mod) //public component
+		}
+
+		toString(){
+
+			return "<" + new Base64().decode(bitobuffview(this.E)) + "|" + new Base64().decode(bitobuffview(this.M)) + ">"
+		}
+
+		process(data){
+
+			let databi = buffviewtobi(data)
+
+			if(databi >= this.M)
+				throw "Data integer too large"
+
+			return bitobuffview(modpow(databi, this.E, this.M))
+		}
+
+		encrypt(data){
+
+			data = typeof data == "string" ? new Utf8().encode(data) : data
+
+			let msglen = (bitlen(this.M) >> 3) - 2 - HDRlen
+
+			if(data.byteLength > msglen)
+				throw "Message too long"
+
+			return {
+				data: this.process(new OAEP().pad(data, msglen))
+			}
+		}
+
+		decrypt(data){
+
+			return {
+				data: new OAEP().unpad(this.process(data))
+			}
+		}
+
+	}
+
+	//public exponent - fermat prime 2**8+1 = 257
+	const PUBEXP = Bi(0x101)
+
+	const PUBLICprefix = ["\n==BEGIN ULURU PUBLIC KEY==\n", "\n==END ULURU PUBLIC KEY==\n"]
+	const PRIVATEprefix = ["\n==BEGIN ULURU PRIVATE KEY==\n", "\n==END ULURU PRIVATE KEY==\n"]
+
+	class RSAKeyPair {
+
+		static fromString(str){
+
+			return new this(
+				RSAKey.fromString(str.split(PUBLICprefix[0])[1].split(PUBLICprefix[1])[0]),
+				RSAKey.fromString(str.split(PRIVATEprefix[0])[1].split(PRIVATEprefix[1])[0])
+			)
+		}
+
+		static generate(bitlength){
+
+			if(!bitlength)
+				return
+
+			bitlength >>= 1
+
+			let E = PUBEXP
+
+			let prime1 = prime(bitlength), prime2 = prime(bitlength)
+
+			let N = prime1 * prime2
+			let phi = (prime1 - n1) * (prime2 - n1)
+			let D = modinv(E, phi)
+
+			return new this(new RSAKey(E, N), new RSAKey(D, N))
+		}
+
+		constructor(publickey, privatekey){
+
+			this.public = publickey
+			this.private = privatekey
+		}
+
+		toString(){
+
+			return PUBLICprefix[0] + this.public.toString() + PUBLICprefix[1] + "\n" +
+					PRIVATEprefix[0] + this.private.toString() + PRIVATEprefix[1]
+		}
+
+	}
 
 	//export everything
 	return {
@@ -641,6 +1019,9 @@ simple
 		ChaCha20,
 		Keccak800,
 		Pbkdf,
+		OAEP,
+		RSAKey,
+		RSAKeyPair,
 		encrypt,
 		decrypt,
 		hash
