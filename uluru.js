@@ -535,7 +535,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 					result[b] ^= block[b]
 			}
 
-			return result
+			return { result }
 		}
 
 	}
@@ -550,7 +550,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 					crypto.getRandomValues(new WordArray(1))[0] :
 					Math.floor(Math.random() * 0x100000000)
 
-		let key = new Pbkdf(32, 1000).compute(new Utf8().encode(password), salt)
+		let key = new Pbkdf(32, 1000).compute(new Utf8().encode(password), salt).result
 
 		let encryptor = new ChaCha20(key, true, salt)
 
@@ -577,7 +577,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 			throw "Incorrectly formated ciphertext"
 		}
 
-		let key = new Pbkdf(32, 1000).compute(new Utf8().encode(password), salt)
+		let key = new Pbkdf(32, 1000).compute(new Utf8().encode(password), salt).result
 
 		let decryptor = new ChaCha20(key, true, salt)
 
@@ -838,7 +838,9 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 			for(let m1 = 0; m1 < HDRlen; m1++)
 				header[m1] ^= mask[m1]
 
-			return merge(header, padxdata)
+			return {
+				data: merge(header, padxdata)
+			}
 		}
 
 		unpad(data){
@@ -864,7 +866,9 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 			if(rehash.join(",") != hash.join(","))
 				throw "OAEP invalid padding hash"
 
-			return new ByteArray(padxdata.buffer, 0, datalen[0])
+			return {
+				data: new ByteArray(padxdata.buffer, 0, datalen[0])
+			}
 		}
 
 	}
@@ -914,14 +918,14 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 				throw "Message too long"
 
 			return {
-				data: this.process(new OAEP().pad(data, msglen))
+				data: this.process(new OAEP().pad(data, msglen).data)
 			}
 		}
 
 		decrypt(data){
 
 			return {
-				data: new OAEP().unpad(this.process(data))
+				data: new OAEP().unpad(this.process(data)).data
 			}
 		}
 
