@@ -1008,7 +1008,7 @@ simple
 
 	//export everything
 	return {
-		version: "1.2",
+		version: "2.0",
 		author: "Franatrtur",
 		enc: {
 			Hex,
