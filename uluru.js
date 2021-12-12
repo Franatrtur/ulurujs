@@ -482,8 +482,8 @@ simple
 				let newlen = (padsigbytes + data.byteLength) >> 6 << 6 // floor(len / 64) * 64
 				let overflow = (padsigbytes + data.byteLength) % 64
 
-				//optimization, use existing data buffer we can
-				thisdata = thisdata.byteLength >= newlen ? new U8Arr(thisdata.buffer, 0, newlen) : new U8Arr(newlen)
+				//optimization, use existing data buffer we can, useful for repeptitive updating
+				thisdata = thisdata.byteLength > newlen ? new U8Arr(thisdata.buffer, 0, newlen) : new U8Arr(newlen)
 
 				thisdata.set(new U8Arr(padblock.buffer, 0, padsigbytes))
 				thisdata.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength - overflow), padsigbytes)
@@ -496,7 +496,7 @@ simple
 				this.padsigbytes = 0
 
 				if(overflow > 0)
-					this.append(new U8Arr(data.buffer, data.byteLength - overflow))
+					this.append(new U8Arr(data.buffer, data.byteOffset + data.byteLength - overflow, overflow))
 			}
 		}
 
@@ -626,6 +626,7 @@ simple
 
 		return new Keccak800().update(new Utf8().encode(text)).finalize().toString(Hex)
 	}
+
 
 	//export everything
 	return {
