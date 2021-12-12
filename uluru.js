@@ -55,6 +55,9 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 	}
 	//amogus
 
+	//shortctut for parsing data as a uint8array
+	const parser = data => typeof data == "string" ? new Utf8().encode(data) : data
+
 	//lookup tables for the hexadecimal encoding
 	const hexchars = Array(256)
 	const hexcodes = {}
@@ -268,7 +271,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 		append(data){
 
-			data = typeof data == "string" ? new Utf8().encode(data) : data
+			data = parser(data)
 
 			let old = this.data
 
@@ -427,7 +430,8 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 		append(data){
 
-			data = typeof data == "string" ? new Utf8().encode(data) : data
+			data = parser(data)
+
 			//shortcuts for the minifier
 			let thisdata = this.data
 			let padblock = this.padblock
@@ -910,7 +914,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 		encrypt(data){
 
-			data = typeof data == "string" ? new Utf8().encode(data) : data
+			data = parser(data)
 
 			let msglen = (bitlen(this.M) >> 3) - 2 - HDRlen
 
@@ -927,6 +931,28 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 			return {
 				data: new OAEP().unpad(this.process(data)).data
 			}
+		}
+
+		sign(data){
+
+			data = parser(data)
+
+			let hash = new Keccak800().update(data).finalize(64).hash
+
+			return {
+				data,
+				signature: this.encrypt(data).data
+			}
+		}
+
+		verify(data, signature){
+
+			data = parser(data)
+
+			let hash = new Keccak800().update(data).finalize(64).hash
+			let authcode = this.decrypt(signature).data
+
+			return hash.join(",") == authcode.join(",")
 		}
 
 	}
