@@ -14,8 +14,8 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 })((function(){
 
 	//shortcuts for the minifier
-	const U8Arr = Uint8Array
-	const U32Arr = Uint32Array
+	const ByteArray = Uint8Array
+	const WordArray = Uint32Array
 
 	//character encodings
 
@@ -23,7 +23,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 		encode(string){
 
-			let u8array = new U8Arr(string.length)
+			let u8array = new ByteArray(string.length)
 
 			for(let i = 0, l = string.length; i < l; i++)
 				u8array[i] = string.charCodeAt(i)
@@ -71,7 +71,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 		encode(string){
 
-			let u8array = new U8Arr(string.length >> 1)
+			let u8array = new ByteArray(string.length >> 1)
 
 			for(let i = 0, l = string.length; i < l; i += 2)
 				u8array[i >> 1] = hexcodes[string.slice(i, i + 2)]
@@ -103,7 +103,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 		}
 	}
 
-	const CONSTcc = new U32Arr(new Ascii().encode("expand 32-byte k").buffer) //nothing-up-my-sleeve constants
+	const CONSTcc = new WordArray(new Ascii().encode("expand 32-byte k").buffer) //nothing-up-my-sleeve constants
 
 	/**
 	 * A modified version of the chacha20 stream cipher
@@ -120,23 +120,23 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 		reset(){
 
-			this.xstate = new U32Arr(16)
+			this.xstate = new WordArray(16)
 
-			this.pmac = this.domac ? new U32Arr(CONSTcc) : false
-			this.cmac = this.domac ? new U32Arr(CONSTcc) : false
+			this.pmac = this.domac ? new WordArray(CONSTcc) : false
+			this.cmac = this.domac ? new WordArray(CONSTcc) : false
 
-			this.data = new U32Arr(0)
+			this.data = new WordArray(0)
 			this.pointer = 0
 			this.sigbytes = 0
 		}
 
 		constructor(key, mac = true, nonce = 0, counter = 0){
 
-			this.state = new U32Arr(16)
+			this.state = new WordArray(16)
 			let st = this.state
 
 			st.set(CONSTcc)
-			st.set(new U32Arr(key.buffer), 4)
+			st.set(new WordArray(key.buffer), 4)
 			st[13] = nonce
 
 			//spread entropy
@@ -185,7 +185,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 			let pm = this.pmac,
 				cm = this.cmac
 
-			let mac = new U32Arr([
+			let mac = new WordArray([
 				pm[0] ^ cm[0],
 				pm[1] ^ cm[1],
 				pm[2] ^ cm[2],
@@ -203,7 +203,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 			for(let re = 0; re < 4; re++)
 				mac[re] += pm[re] + cm[re]
 
-			return new U8Arr(mac.buffer)
+			return new ByteArray(mac.buffer)
 		}
 
 		process(flush = false){
@@ -273,12 +273,12 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 			let old = this.data
 
 			let newlen = Math.ceil((this.sigbytes + data.byteLength) / 64) * 64
-			this.data = new U8Arr(newlen)
+			this.data = new ByteArray(newlen)
 
-			this.data.set(new U8Arr(old.buffer, 0, this.sigbytes))
-			this.data.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength), this.sigbytes)
+			this.data.set(new ByteArray(old.buffer, 0, this.sigbytes))
+			this.data.set(new ByteArray(data.buffer, data.byteOffset, data.byteLength), this.sigbytes)
 
-			this.data = new U32Arr(this.data.buffer)
+			this.data = new WordArray(this.data.buffer)
 			this.sigbytes += data.byteLength
 		}
 
@@ -296,7 +296,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 			return {
 
-				data: new U8Arr(this.data.buffer, 0, this.sigbytes),
+				data: new ByteArray(this.data.buffer, 0, this.sigbytes),
 				mac: this.getmac()
 			}
 		}
@@ -304,7 +304,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 	}
 
 
-	const RHOoffets = new U8Arr([
+	const RHOoffets = new ByteArray([
 		 0,  1, 62, 28, 27,
 		36, 44,  6, 55, 20,
 		 3, 10, 43, 25, 39,
@@ -312,7 +312,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 		18,  2, 61, 56, 14
 	])
 
-	const RCs = new U32Arr([
+	const RCs = new WordArray([
 		0x00000001, 0x00008082, 0x0000808a, 0x80008000, 0x0000808b, 0x80000001, 0x80008081, 0x00008009,
 		0x0000008a, 0x00000088, 0x80008009, 0x8000000a, 0x8000808b, 0x0000008b, 0x00008089, 0x00008003,
 		0x00008002, 0x00000080, 0x0000800a, 0x8000000a, 0x80008081, 0x00008080, 0x80000001, 0x80008008
@@ -321,15 +321,15 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 	//keccak coordinates precomputation
 
 	//x mod plus 1
-	const XMP1 = new U8Arr(25)
+	const XMP1 = new ByteArray(25)
 	//x mod minus 1
-	const XMM1 = new U8Arr(25)
+	const XMM1 = new ByteArray(25)
 	//x y permutation
-	const XYP = new U8Arr(25)
+	const XYP = new ByteArray(25)
 	//x plus 1 - next lane
-	const XP1 = new U8Arr(25)
+	const XP1 = new ByteArray(25)
 	//x plus 2 - next lane
-	const XP2 = new U8Arr(25)
+	const XP2 = new ByteArray(25)
 
 	let nx, ny
 
@@ -355,13 +355,13 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 		reset(){
 
-			this.state = new U32Arr(25)
+			this.state = new WordArray(25)
 
-			this.temp = new U32Arr(25)
-			this.theta = new U32Arr(5)
+			this.temp = new WordArray(25)
+			this.theta = new WordArray(5)
 
-			this.data = new U32Arr(0)
-			this.padblock = new U32Arr(16)
+			this.data = new WordArray(0)
+			this.padblock = new WordArray(16)
 			this.padsigbytes = 0
 			this.pointer = 0
 		}
@@ -436,13 +436,13 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 			//incomplete block
 			if(data.byteLength + padsigbytes < 64){
 
-				padblock = new U8Arr(padblock.buffer)
-				padblock.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength), padsigbytes)
+				padblock = new ByteArray(padblock.buffer)
+				padblock.set(new ByteArray(data.buffer, data.byteOffset, data.byteLength), padsigbytes)
 
 				padblock[padblock.length - 1] = 0x80
 				padblock[data.byteLength + padsigbytes] ^= 0x06
 
-				this.padblock = new U32Arr(padblock.buffer)
+				this.padblock = new WordArray(padblock.buffer)
 				this.padsigbytes += data.byteLength
 			}
 			//new complete block
@@ -452,12 +452,12 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 				let overflow = (padsigbytes + data.byteLength) % 64
 
 				//optimization, use existing data buffer we can, useful for repeptitive updating
-				thisdata = thisdata.byteLength > newlen ? new U8Arr(thisdata.buffer, 0, newlen) : new U8Arr(newlen)
+				thisdata = thisdata.byteLength > newlen ? new ByteArray(thisdata.buffer, 0, newlen) : new ByteArray(newlen)
 
-				thisdata.set(new U8Arr(padblock.buffer, 0, padsigbytes))
-				thisdata.set(new U8Arr(data.buffer, data.byteOffset, data.byteLength - overflow), padsigbytes)
+				thisdata.set(new ByteArray(padblock.buffer, 0, padsigbytes))
+				thisdata.set(new ByteArray(data.buffer, data.byteOffset, data.byteLength - overflow), padsigbytes)
 
-				this.data = new U32Arr(thisdata.buffer, 0, newlen >> 2)
+				this.data = new WordArray(thisdata.buffer, 0, newlen >> 2)
 
 				//append the overflow as a new incomplete block
 
@@ -465,7 +465,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 				this.padsigbytes = 0
 
 				if(overflow > 0)
-					this.append(new U8Arr(data.buffer, data.byteOffset + data.byteLength - overflow, overflow))
+					this.append(new ByteArray(data.buffer, data.byteOffset + data.byteLength - overflow, overflow))
 			}
 		}
 
@@ -482,11 +482,11 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 			this.process(true)
 
 			let len = Math.ceil(outputbytes / 64) * 16
-			let result = new U32Arr(len)
+			let result = new WordArray(len)
 
 			for(let i = 0; i < len; i += 16){
 
-				result.set(new U32Arr(this.state.buffer, 0, 16), i)
+				result.set(new WordArray(this.state.buffer, 0, 16), i)
 				this.keccakF(this.state)
 			}
 
@@ -497,7 +497,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 					return new (encoder || Hex)().decode(this.hash)
 				},
 
-				hash: new U8Arr(result.buffer, 0, outputbytes)
+				hash: new ByteArray(result.buffer, 0, outputbytes)
 			}
 		}
 
@@ -519,11 +519,11 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 		compute(password, salt){
 
-			let result = new U8Arr(this.outputbytes)
+			let result = new ByteArray(this.outputbytes)
 			let block
 			let hasher = new Keccak800()
 
-			hasher.update(new U32Arr([salt]))
+			hasher.update(new WordArray([salt]))
 			hasher.finalize(0)
 			
 			for(let i = 0; i < this.iterations; i++){
@@ -547,7 +547,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 		//get random salt, securely if we can ඞ
 		let salt = typeof crypto == "object" ? 
-					crypto.getRandomValues(new U32Arr(1))[0] :
+					crypto.getRandomValues(new WordArray(1))[0] :
 					Math.floor(Math.random() * 0x100000000)
 
 		let key = new Pbkdf(32, 1000).compute(new Utf8().encode(password), salt)
@@ -558,7 +558,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 		let encrypted = encryptor.finalize()
 
-		return  new Hex().decode(new U8Arr(new U32Arr([salt]).buffer)) +
+		return  new Hex().decode(new ByteArray(new WordArray([salt]).buffer)) +
 				new Base64().decode(encrypted.data) +
 				new Hex().decode(encrypted.mac)
 	}
@@ -569,7 +569,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 		try{
 
-			salt = new U32Arr(new Hex().encode(ciphertext.slice(0, 8)).buffer)[0]
+			salt = new WordArray(new Hex().encode(ciphertext.slice(0, 8)).buffer)[0]
 			cdata = new Base64().encode(ciphertext.slice(8, -32))
 			macstr = ciphertext.slice(-32)
 		}
@@ -659,7 +659,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 	function randomBi(bitlength){
 
 		let result = n0
-		let rand32 = typeof crypto == "object" ? (() => crypto.getRandomValues(new U32Arr(1))[0]) : Math.random
+		let rand32 = typeof crypto == "object" ? (() => crypto.getRandomValues(new WordArray(1))[0]) : Math.random
 
 		for(var w = 0; w * 32 < bitlength; w++)
 			result = (result << Bi(32)) | Bi(rand32())
@@ -786,7 +786,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 	function buffviewtobi(bufferview){
 
 		return Bi("0x" + new Hex().decode(
-			new U8Arr(bufferview.buffer, bufferview.byteOffset || 0, bufferview.byteLength || 0)
+			new ByteArray(bufferview.buffer, bufferview.byteOffset || 0, bufferview.byteLength || 0)
 		))
 	}
 
@@ -806,7 +806,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 		let pointer = 0
 		for(let i = 0; i < bufferviews.length; i++){
 
-			result.set(new U8Arr(bufferviews[i].buffer, bufferviews[i].byteOffset, bufferviews[i].byteLength), pointer)
+			result.set(new ByteArray(bufferviews[i].buffer, bufferviews[i].byteOffset, bufferviews[i].byteLength), pointer)
 			pointer += bufferviews[i].byteLength
 		}
 
@@ -821,11 +821,11 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 		pad(data, len){
 
-			let padxdata = new U8Arr(len - HDRlen)
+			let padxdata = new ByteArray(len - HDRlen)
 			padxdata.set(data)
 
-			let datalen = new U32Arr([data.byteLength])
-			let seed = crypto.getRandomValues(new U8Arr(SEEDlen))
+			let datalen = new WordArray([data.byteLength])
+			let seed = crypto.getRandomValues(new ByteArray(SEEDlen))
 			let hash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen).hash
 
 			let header = merge(datalen, seed, hash)
@@ -845,8 +845,8 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 			let len = data.byteLength
 
-			let header = new U8Arr(data.buffer, 0, HDRlen).slice()
-			let padxdata = new U8Arr(data.buffer, HDRlen).slice()
+			let header = new ByteArray(data.buffer, 0, HDRlen).slice()
+			let padxdata = new ByteArray(data.buffer, HDRlen).slice()
 
 			let mask = new Keccak800().update(padxdata).finalize(HDRlen).hash
 			for(let m1 = 0; m1 < HDRlen; m1++)
@@ -856,15 +856,15 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 			for(let m0 = 0; m0 < len - HDRlen; m0++)
 				padxdata[m0] ^= mask[m0]
 
-			let datalen = new U32Arr(header.buffer, 0, 1)
-			let seed = new U8Arr(header.buffer, 4, SEEDlen)
-			let hash = new U8Arr(header.buffer, 4 + SEEDlen, HASHlen)
+			let datalen = new WordArray(header.buffer, 0, 1)
+			let seed = new ByteArray(header.buffer, 4, SEEDlen)
+			let hash = new ByteArray(header.buffer, 4 + SEEDlen, HASHlen)
 
 			let rehash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen).hash
 			if(rehash.join(",") != hash.join(","))
 				throw "OAEP invalid padding hash"
 
-			return new U8Arr(padxdata.buffer, 0, datalen[0])
+			return new ByteArray(padxdata.buffer, 0, datalen[0])
 		}
 
 	}
