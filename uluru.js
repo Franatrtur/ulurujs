@@ -993,7 +993,28 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 		RSAKeyPair,
 		encrypt,
 		decrypt,
-		hash
+		hash,
+		utils: [
+			hexcodes,
+			hexchars,
+			PUBEXP,
+			SEEDlen,
+			HASHlen,
+			HDRlen,
+			smallprimes,
+			merge,
+			bitobuffview,
+			buffviewtobi,
+			randomBi,
+			bitlen,
+			mask,
+			modinv,
+			modpow,
+			fermat,
+			millerrabin,
+			isprime,
+			prime
+		]
 	}
 
 })(), "Uluru"));
