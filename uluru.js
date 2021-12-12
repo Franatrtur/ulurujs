@@ -612,7 +612,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 		while (x){
 
 			//optimization: go through bigger chunks of 32 bits if possible
-			stillbigger &&= x > bits32
+			stillbigger = stillbigger && x > bits32
 
 			bits += stillbigger ? 32 : 1
 			x >>= Bi(stillbigger ? 32 : 1)
