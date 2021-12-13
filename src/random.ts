@@ -4,14 +4,8 @@ namespace Uluru {
 
 		static capacity = 16300 //max is 65536 bytes -> 16thousand 32bit words
 
-		private pool: Uint32Array = new Uint32Array(Random.capacity)
-		private pointer: number = 0
-
-		constructor(){
-
-			this.reset()
-		
-		}
+		private static pool: Uint32Array = new Uint32Array(this.capacity)
+		private static pointer: number = 0
 
 		static get secure(){
 
@@ -19,7 +13,7 @@ namespace Uluru {
 
 		}
 	
-		reset(){
+		static reset(){
 
 			this.pointer = 0
 
@@ -34,26 +28,28 @@ namespace Uluru {
 
 		word(){
 
-			if(this.pointer >= this.pool.length)
-				this.reset()
+			if(Random.pointer >= Random.pool.length)
+				Random.reset()
 
-			return this.pool[this.pointer++]
+			return Random.pool[Random.pointer++]
 
 		}
 
 		fill(arr: Uint32Array | Uint8Array | Uint16Array){
 
+			let rand = Random
+
 			if(ArrayBuffer.isView(arr)){
 
-				this.reset()
+				rand.reset()
 
 				let wrds = new Uint32Array(arr.buffer, arr.byteOffset, arr.byteLength >> 2)
 
-				for(let i = 0, l = wrds.length; i < l; i += this.pool.length){
+				for(let i = 0, l = wrds.length; i < l; i += rand.pool.length){
 
-					wrds.set(new Uint32Array(this.pool.buffer, 0, Math.min((l - i), this.pool.length)), i)
+					wrds.set(new Uint32Array(rand.pool.buffer, 0, Math.min((l - i), rand.pool.length)), i)
 
-					this.reset()
+					rand.reset()
 
 				}
 
@@ -61,14 +57,14 @@ namespace Uluru {
 
 				for(let i = 0, l = bytes.length; i < l; i++)
 				//@ts-ignore
-					bytes[i] = this.word()
+					bytes[i] = rand.word()
 
 			}
 			else
 			//@ts-ignore
 				for(let i = 0, l = arr.length; i < l; i++)
 				//@ts-ignore
-					arr[i] = this.word()
+					arr[i] = rand.word()
 
 			return arr
 
