@@ -139,7 +139,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 			let st = this.state
 
 			st.set(CONSTcc)
-			st.set(new WordArray(key.buffer), 4)
+			st.set(new WordArray(key.buffer, key.byteOffset, key.byteLength >> 2), 4, 8)
 			st[13] = nonce
 
 			//spread entropy
@@ -544,62 +544,6 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 
 	}
 
-	//functions for simplified user interaction
-	//using pbkdf with 1000 iterations to slow down the key generation
-
-	function encrypt(plaintext, password){
-
-		//get random salt, securely if we can ඞ
-		let salt = typeof crypto == "object" ? 
-					crypto.getRandomValues(new WordArray(1))[0] :
-					Math.floor(Math.random() * 0x100000000)
-
-		let key = new Pbkdf(32, 1000).compute(new Utf8().encode(password), salt).result
-
-		let encryptor = new ChaCha20(key, true, salt)
-
-		encryptor.update(new Utf8().encode(plaintext))
-
-		let encrypted = encryptor.finalize()
-
-		return  new Hex().decode(new ByteArray(new WordArray([salt]).buffer)) +
-				new Base64().decode(encrypted.data) +
-				new Hex().decode(encrypted.mac)
-	}
-
-	function decrypt(ciphertext, password){
-
-		let salt, cdata, macstr
-
-		try{
-
-			salt = new WordArray(new Hex().encode(ciphertext.slice(0, 8)).buffer)[0]
-			cdata = new Base64().encode(ciphertext.slice(8, -32))
-			macstr = ciphertext.slice(-32)
-		}
-		catch(e){
-			throw "Incorrectly formated ciphertext"
-		}
-
-		let key = new Pbkdf(32, 1000).compute(new Utf8().encode(password), salt).result
-
-		let decryptor = new ChaCha20(key, true, salt)
-
-		decryptor.update(cdata)
-
-		let decrypted = decryptor.finalize()
-
-		if(new Hex().decode(decrypted.mac) != macstr)
-			throw "Invalid authentication"
-
-		return new Utf8().decode(decrypted.data)
-	}
-
-	function hash(text){
-
-		return new Keccak800().update(new Utf8().encode(text)).finalize().toString(Hex)
-	}
-
 	const Bi = BigInt
 
 	const n1 = Bi(1)
@@ -665,7 +609,7 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 		let result = n0
 		let rand32 = typeof crypto == "object" ? (() => crypto.getRandomValues(new WordArray(1))[0]) : Math.random
 
-		for(var w = 0; w * 32 < bitlength; w++)
+		for(let w = 0; w * 32 < bitlength; w++)
 			result = (result << Bi(32)) | Bi(rand32())
 
 		return result & mask(bitlength)
@@ -1000,30 +944,155 @@ LICENSED UNDER THE MIT LICENSE: https://github.com/Franatrtur/ulurucrypto/blob/m
 		toString(){
 
 			return PUBLICprefix[0] + this.public.toString() + PUBLICprefix[1] + "\n" +
-					PRIVATEprefix[0] + this.private.toString() + PRIVATEprefix[1]
+				PRIVATEprefix[0] + this.private.toString() + PRIVATEprefix[1]
 		}
 
 	}
 
+
+	//functions for simplified user interaction
+	//using pbkdf with 1000 iterations to slow down the key generation
+
+	function encrypt(plaintext, password){
+
+		//get random salt, securely if we can ඞ
+		let salt = typeof crypto == "object" ? 
+					crypto.getRandomValues(new WordArray(1))[0] :
+					Math.floor(Math.random() * 0x100000000)
+
+		let key = new Pbkdf(32, 1000).compute(new Utf8().encode(password), salt).result
+
+		let encryptor = new ChaCha20(key, true, salt)
+
+		encryptor.update(new Utf8().encode(plaintext))
+
+		let encrypted = encryptor.finalize()
+
+		return  new Hex().decode(new ByteArray(new WordArray([salt]).buffer)) +
+				new Base64().decode(encrypted.data) +
+				new Hex().decode(encrypted.mac)
+	}
+
+	function decrypt(ciphertext, password){
+
+		let salt, cdata, macstr
+
+		try{
+
+			salt = new WordArray(new Hex().encode(ciphertext.slice(0, 8)).buffer)[0]
+			cdata = new Base64().encode(ciphertext.slice(8, -32))
+			macstr = ciphertext.slice(-32)
+		}
+		catch(e){
+			throw "Incorrectly formated ciphertext"
+		}
+
+		let key = new Pbkdf(32, 1000).compute(new Utf8().encode(password), salt).result
+
+		let decryptor = new ChaCha20(key, true, salt)
+
+		decryptor.update(cdata)
+
+		let decrypted = decryptor.finalize()
+
+		if(new Hex().decode(decrypted.mac) != macstr)
+			throw "Invalid authentication"
+
+		return new Utf8().decode(decrypted.data)
+	}
+
+	function hash(text){
+
+		return new Keccak800().update(new Utf8().encode(text)).finalize().toString(Hex)
+	}
+
+	function rsaGenerate(){
+
+		return new RSAKeyPair(3072).toString()
+	}
+
+	function rsaSign(message, privkeystr){
+
+		return new Base64().decode(
+			RSAKey.fromString(privkeystr).sign(
+				new Utf8().encode(message)
+			).signature
+		)
+	}
+
+	function rsaVerify(message, signature, pubkeystr){
+
+		return RSAKey.fromString(pubkeystr).verify(
+			new Utf8().encode(message),
+			new Base64().encode(signature)
+		)
+	}
+
+	function rsaEncrypt(message, pubkeystr){
+
+		let key = RSAKey.fromString(pubkeystr)
+
+		let symkey = crypto.getRandomValues(
+			new WordArray(8)
+		)
+
+		let encsymkey = new Base64().decode(
+			key.encrypt(symkey).data
+		)
+
+		let encptx = new ChaCha20(symkey, true).update(
+			new Utf8().encode(message)
+		).finalize()
+
+		return encsymkey + "|" + new Base64().decode(encptx.data) + new Hex().decode(encptx.mac)
+	}
+
+	function rsaDecrypt(message, privkeystr){
+
+		let key, symkey, encptx, mac, splitted
+
+		try{
+
+			key = RSAKey.fromString(privkeystr)
+			splitted = message.split("|")
+			symkey = new Base64().encode(splitted[0])
+			encptx = new Base64().encode(splitted[1].slice(0, -32))
+			mac = new Hex().encode(splitted[1].slice(32))
+		}
+		catch(e){
+			throw "Incorrectly formatted RSA ciphertext"
+		}
+	}
+
 	//export everything
 	return {
-		version: "2.0",
+
+		version: "2.2",
 		author: "Franatrtur",
+
 		enc: {
 			Hex,
 			Utf8,
 			Ascii,
 			Base64
 		},
+
 		ChaCha20,
 		Keccak800,
 		Pbkdf,
 		OAEP,
 		RSAKey,
 		RSAKeyPair,
+
 		encrypt,
 		decrypt,
 		hash,
+		rsaGenerate,
+		rsaSign,
+		rsaVerify,
+		rsaEncrypt,
+		rsaDecrypt,
+
 		utils: [
 			hexcodes,
 			hexchars,
