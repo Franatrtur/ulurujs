@@ -1,0 +1,86 @@
+namespace Uluru {
+
+	const SEEDlen = 12
+	const HASHlen = 16
+	const HDRlen = SEEDlen + HASHlen + 4
+
+	function merge(...bufferviews: ArrayBufferView[]){
+
+		let len = 0
+		for(let i = 0; i < bufferviews.length; i++)
+			len += bufferviews[i].byteLength
+
+		let result = new Uint8Array(len)
+		let pointer = 0
+		for(let i = 0; i < bufferviews.length; i++){
+
+			result.set(new Uint8Array(bufferviews[i].buffer, bufferviews[i].byteOffset, bufferviews[i].byteLength), pointer)
+			pointer += bufferviews[i].byteLength
+		}
+
+		return result
+	}
+
+	export class OAEP {
+
+		static seedlen = SEEDlen
+		static hashlen = HASHlen
+		static hdrlen = HDRlen
+
+		pad(data, len){
+
+			let padxdata = new Uint8Array(len - HDRlen)
+			padxdata.set(data)
+
+			let datalen = new Uint32Array([data.byteLength])
+			let seed = crypto.getRandomValues(new Uint8Array(SEEDlen))
+			let hash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen).hash
+
+			let header = merge(datalen, seed, hash)
+
+			let mask = new Keccak800().update(header).finalize(len - HDRlen).hash
+			for(let m0 = 0; m0 < len - HDRlen; m0++)
+				padxdata[m0] ^= mask[m0]
+
+			mask = new Keccak800().update(padxdata).finalize(HDRlen).hash
+			for(let m1 = 0; m1 < HDRlen; m1++)
+				header[m1] ^= mask[m1]
+
+			return {
+				data: merge(header, padxdata)
+			}
+
+		}
+
+		unpad(data){
+
+			let len = data.byteLength
+
+			let header = new Uint8Array(data.buffer, 0, HDRlen).slice()
+			let padxdata = new Uint8Array(data.buffer, HDRlen).slice()
+
+			let mask = new Keccak800().update(padxdata).finalize(HDRlen).hash
+			for(let m1 = 0; m1 < HDRlen; m1++)
+				header[m1] ^= mask[m1]
+
+			mask = new Keccak800().update(header).finalize(len - HDRlen).hash
+			for(let m0 = 0; m0 < len - HDRlen; m0++)
+				padxdata[m0] ^= mask[m0]
+
+			let datalen = new Uint32Array(header.buffer, 0, 1)
+			let seed = new Uint8Array(header.buffer, 4, SEEDlen)
+			let hash = new Uint8Array(header.buffer, 4 + SEEDlen, HASHlen)
+
+			let rehash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen).hash
+			if(rehash.join(",") != hash.join(","))
+				throw "OAEP invalid padding hash"
+
+			return {
+				data: new Uint8Array(padxdata.buffer, 0, datalen[0])
+			}
+			
+		}
+
+	}
+
+}

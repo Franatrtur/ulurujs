@@ -1,0 +1,31 @@
+{
+
+	"compilerOptions" : {
+
+		"outFile" : "uluru.js",
+
+		"target": "ES6",
+
+		"lib": ["DOM", "ESNext"],
+
+		"sourceMap" : false,
+
+		"removeComments": true,
+
+		"declaration": true,
+
+		"watch": true
+
+	},
+
+	"include": [
+
+		"./src/extra/import.ts",
+
+		"./src/*.ts",
+
+		"./src/extra/export.ts"
+
+	],
+
+}
