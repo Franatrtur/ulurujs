@@ -33,7 +33,7 @@ namespace Uluru {
 			padxdata.set(data)
 
 			let datalen = new Uint32Array([data.byteLength])
-			let seed = crypto.getRandomValues(new Uint8Array(SEEDlen))
+			let seed = new Random().fill(new Uint8Array(SEEDlen))
 			let hash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen).hash
 
 			let header = merge(datalen, seed, hash)

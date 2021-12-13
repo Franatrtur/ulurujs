@@ -69,10 +69,10 @@ namespace Uluru {
 	function randomBi(bitlength: number){
 
 		let result = n0
-		let rand32 = typeof crypto == "object" ? (() => crypto.getRandomValues(new Uint32Array(1))[0]) : Math.random
+		let rand = new Random()
 
 		for(let w = 0; w * 32 < bitlength; w++)
-			result = (result << Bi(32)) | Bi(rand32())
+			result = (result << Bi(32)) | Bi(rand.word())
 
 		return result & mask(bitlength)
 

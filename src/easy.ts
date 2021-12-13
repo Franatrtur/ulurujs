@@ -5,10 +5,7 @@ namespace Uluru {
 
 	export function encrypt(plaintext, password){
 
-		//get random salt, securely if we can ඞ
-		let salt = typeof crypto == "object" ? 
-					crypto.getRandomValues(new Uint32Array(1))[0] :
-					Math.floor(Math.random() * 0x100000000)
+		let salt = new Random().word()
 
 		let key = new Pbkdf(32, 1000).compute(new enc.Utf8().encode(password), salt).result
 
