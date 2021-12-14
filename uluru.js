@@ -239,7 +239,7 @@ var Uluru;
     Uluru.rsaVerify = rsaVerify;
     function rsaEncrypt(message, pubkeystr) {
         let key = Uluru.RSAKey.fromString(pubkeystr);
-        let symkey = new Uluru.Random().fill(new Uint32Array(8));
+        let symkey = new Uluru.Random().fill(new Uint8Array(32));
         let encsymkey = new Uluru.enc.Base64().decode(key.encrypt(symkey).data);
         let encptx = new Uluru.ChaCha20(symkey, true).update(new Uluru.enc.Utf8().encode(message)).finalize();
         return encsymkey + "|" + new Uluru.enc.Base64().decode(encptx.data) + new Uluru.enc.Hex().decode(encptx.mac);

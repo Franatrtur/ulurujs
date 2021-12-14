@@ -83,7 +83,7 @@ namespace Uluru {
 
 		let key = RSAKey.fromString(pubkeystr)
 
-		let symkey = new Random().fill(new Uint32Array(8))
+		let symkey = new Random().fill(new Uint8Array(32))
 
 		let encsymkey = new enc.Base64().decode(
 			key.encrypt(symkey).data
