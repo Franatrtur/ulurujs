@@ -60,7 +60,7 @@ declare namespace Uluru {
     namespace enc {
         interface encoding {
             encode: (str: string) => Uint8Array;
-            decode: (u8array: Uint8Array) => string;
+            decode: (u8array: ArrayBufferView) => string;
         }
     }
 }

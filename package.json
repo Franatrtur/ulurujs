@@ -7,12 +7,21 @@
     "type": "git",
     "url": "https://github.com/Franatrtur/ulurujs.git"
   },
+  "bugs": {
+    "email": "pro.it.kurz@gmail.com"
+  },
   "directories": {
     "test": "test"
   },
+  "files": [
+    "uluru.js",
+    "uluru.d.ts",
+    "test/"
+  ],
   "scripts": {
     "test": "node --trace-uncaught test/test",
-    "build": "tsc"
+    "build": "tsc",
+    "compress": "node build/minify-main"
   },
   "keywords": [
     "encryption",
@@ -24,5 +33,8 @@
     "cipher"
   ],
   "author": "Franatrtur",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "terser": "^5.10.0"
+  }
 }

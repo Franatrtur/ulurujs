@@ -829,5 +829,7 @@ var Uluru;
         enc.Utf8 = Utf8;
     })(enc = Uluru.enc || (Uluru.enc = {}));
 })(Uluru || (Uluru = {}));
+if (typeof define === "function" && define.amd)
+    define("Uluru", [], () => Uluru);
 if (typeof module != "undefined")
     module.exports = Uluru;
