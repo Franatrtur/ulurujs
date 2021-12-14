@@ -29,6 +29,8 @@ namespace Uluru {
 	
 			decode(bytes){
 
+				bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+
 				let str = Array(bytes.length)
 
 				for(let byte = 0; byte < bytes.length; byte++)

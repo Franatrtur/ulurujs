@@ -10,6 +10,7 @@ var Uluru;
                 return u8array;
             }
             decode(bytes) {
+                bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
                 return String.fromCharCode(...bytes);
             }
         }
@@ -44,6 +45,7 @@ var Uluru;
                 }
             }
             decode(bytes) {
+                bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
                 if (typeof btoa == "function")
                     return btoa(new enc.Ascii().decode(bytes));
                 let str = [];
@@ -283,6 +285,7 @@ var Uluru;
                 return bytes;
             }
             decode(bytes) {
+                bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
                 let str = Array(bytes.length);
                 for (let byte = 0; byte < bytes.length; byte++)
                     str[byte] = hexcodes[bytes[byte]];
@@ -801,6 +804,7 @@ var Uluru;
                 }
             }
             decode(bytes) {
+                bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
                 if (typeof TextDecoder == "function")
                     return new TextDecoder().decode(bytes);
                 let str = [];

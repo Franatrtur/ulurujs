@@ -16,6 +16,8 @@ namespace Uluru {
 			}
 	
 			decode(bytes){
+
+				bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 	
 				return String.fromCharCode(...bytes)
 				

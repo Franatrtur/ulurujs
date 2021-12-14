@@ -53,6 +53,8 @@ namespace Uluru {
 	
 			decode(bytes){
 
+				bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+
 				if(typeof TextDecoder == "function")
 					return new TextDecoder().decode(bytes)
 

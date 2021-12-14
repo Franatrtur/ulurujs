@@ -48,6 +48,8 @@ namespace Uluru {
 			}
 	
 			decode(bytes){
+
+				bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 	
 				if(typeof btoa == "function")
 					return btoa(new Ascii().decode(bytes))
