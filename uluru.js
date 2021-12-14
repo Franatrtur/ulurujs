@@ -438,6 +438,8 @@ var Uluru;
         pad(data, len) {
             let padxdata = new Uint8Array(len - HDRlen);
             padxdata.set(data);
+            if (len <= HDRlen)
+                throw "OAEP message length too small";
             let datalen = new Uint32Array([data.byteLength]);
             let seed = new Uluru.Random().fill(new Uint8Array(SEEDlen));
             let hash = new Uluru.Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen).hash;
@@ -504,32 +506,33 @@ var Uluru;
 })(Uluru || (Uluru = {}));
 var Uluru;
 (function (Uluru) {
-    var _a;
+    const CAPACITY = 16300;
+    let Pool = new Uint32Array(CAPACITY);
+    let Pointer = 0;
+    function reset() {
+        Pointer = 0;
+        if (Random.secure)
+            crypto.getRandomValues(Pool);
+        else
+            for (let i = 0, l = CAPACITY; i < l; i++)
+                Pool[i] = Math.floor(Math.random() * 0x100000000);
+    }
     class Random {
         static get secure() {
             return typeof crypto == "object";
         }
-        static reset() {
-            this.pointer = 0;
-            if (Random.secure)
-                crypto.getRandomValues(this.pool);
-            else
-                for (let i = 0, l = this.pool.length; i < l; i++)
-                    this.pool[i] = Math.floor(Math.random() * 0x100000000);
-        }
         word() {
-            if (Random.pointer >= Random.pool.length)
-                Random.reset();
-            return Random.pool[Random.pointer++];
+            if (Pointer >= CAPACITY)
+                reset();
+            return Pool[Pointer++];
         }
         fill(arr) {
-            let rand = Random;
             if (ArrayBuffer.isView(arr)) {
-                rand.reset();
+                reset();
                 let wrds = new Uint32Array(arr.buffer, arr.byteOffset, arr.byteLength >> 2);
-                for (let i = 0, l = wrds.length; i < l; i += rand.pool.length) {
-                    wrds.set(new Uint32Array(rand.pool.buffer, 0, Math.min((l - i), rand.pool.length)), i);
-                    rand.reset();
+                for (let i = 0, l = wrds.length; i < l; i += CAPACITY) {
+                    wrds.set(new Uint32Array(Pool.buffer, 0, Math.min((l - i), CAPACITY)), i);
+                    reset();
                 }
                 let bytes = new Uint8Array(arr.buffer, arr.byteLength >> 2 << 2, arr.byteLength - (arr.byteLength >> 2 << 2));
                 for (let i = 0, l = bytes.length; i < l; i++)
@@ -542,11 +545,9 @@ var Uluru;
             return arr;
         }
     }
-    _a = Random;
-    Random.capacity = 16300;
-    Random.pool = new Uint32Array(_a.capacity);
-    Random.pointer = 0;
+    Random.capacity = CAPACITY;
     Uluru.Random = Random;
+    reset();
 })(Uluru || (Uluru = {}));
 var Uluru;
 (function (Uluru) {

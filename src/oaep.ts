@@ -32,6 +32,9 @@ namespace Uluru {
 			let padxdata = new Uint8Array(len - HDRlen)
 			padxdata.set(data)
 
+			if(len <= HDRlen)
+				throw "OAEP message length too small"
+
 			let datalen = new Uint32Array([data.byteLength])
 			let seed = new Random().fill(new Uint8Array(SEEDlen))
 			let hash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen).hash

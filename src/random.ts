@@ -1,55 +1,55 @@
 namespace Uluru {
 
+	const CAPACITY = 16300 //max is 65536 bytes -> 16thousand 32bit words
+
+	let Pool = new Uint32Array(CAPACITY)
+	let Pointer = 0
+
+	function reset(){
+
+		Pointer = 0
+
+		if(Random.secure)
+			crypto.getRandomValues(Pool)
+
+		else 
+			for(let i = 0, l = CAPACITY; i < l; i++)
+				Pool[i] = Math.floor(Math.random() * 0x100000000)
+
+	}
+
 	export class Random {
 
-		static capacity = 16300 //max is 65536 bytes -> 16thousand 32bit words
-
-		private static pool: Uint32Array = new Uint32Array(this.capacity)
-		private static pointer: number = 0
+		static capacity = CAPACITY
 
 		static get secure(){
 
 			return typeof crypto == "object"
 
 		}
-	
-		static reset(){
-
-			this.pointer = 0
-
-			if(Random.secure)
-				crypto.getRandomValues(this.pool)
-
-			else 
-				for(let i = 0, l = this.pool.length; i < l; i++)
-					this.pool[i] = Math.floor(Math.random() * 0x100000000)
-
-		}
 
 		word(){
 
-			if(Random.pointer >= Random.pool.length)
-				Random.reset()
+			if(Pointer >= CAPACITY)
+				reset()
 
-			return Random.pool[Random.pointer++]
+			return Pool[Pointer++]
 
 		}
 
 		fill(arr: Uint32Array | Uint8Array | Uint16Array){
 
-			let rand = Random
-
 			if(ArrayBuffer.isView(arr)){
 
-				rand.reset()
+				reset()
 
 				let wrds = new Uint32Array(arr.buffer, arr.byteOffset, arr.byteLength >> 2)
 
-				for(let i = 0, l = wrds.length; i < l; i += rand.pool.length){
+				for(let i = 0, l = wrds.length; i < l; i += CAPACITY){
 
-					wrds.set(new Uint32Array(rand.pool.buffer, 0, Math.min((l - i), rand.pool.length)), i)
+					wrds.set(new Uint32Array(Pool.buffer, 0, Math.min((l - i), CAPACITY)), i)
 
-					rand.reset()
+					reset()
 
 				}
 
@@ -72,5 +72,7 @@ namespace Uluru {
 		}
 
 	}
+
+	reset()
 
 }
