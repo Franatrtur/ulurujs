@@ -299,19 +299,26 @@ namespace Uluru {
 
 			return {
 				data,
-				signature: this.encrypt(data).data
+				signature: this.encrypt(hash).data
 			}
 
 		}
 
 		verify(data: ArrayBufferView | string, signature: ArrayBufferView){
 
-			data = typeof data == "string" ? new enc.Utf8().encode(data as string) : data
+			try{
 
-			let hash = new Keccak800().update(data).finalize(64).hash
-			let authcode = this.decrypt(signature).data
+				data = typeof data == "string" ? new enc.Utf8().encode(data as string) : data
 
-			return hash.join(",") == authcode.join(",")
+				let hash = new Keccak800().update(data).finalize(64).hash
+				let authcode = this.decrypt(signature).data
+
+				return hash.join(",") == authcode.join(",")
+
+			}
+			catch(e){
+				return false
+			}
 
 		}
 

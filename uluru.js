@@ -192,9 +192,7 @@ var Uluru;
 var Uluru;
 (function (Uluru) {
     function encrypt(plaintext, password) {
-        let salt = typeof crypto == "object" ?
-            crypto.getRandomValues(new Uint32Array(1))[0] :
-            Math.floor(Math.random() * 0x100000000);
+        let salt = new Uluru.Random().word();
         let key = new Uluru.Pbkdf(32, 1000).compute(new Uluru.enc.Utf8().encode(password), salt).result;
         let encryptor = new Uluru.ChaCha20(key, true, salt);
         encryptor.update(new Uluru.enc.Utf8().encode(plaintext));
@@ -254,7 +252,7 @@ var Uluru;
             splitted = message.split("|");
             symkey = new Uluru.enc.Base64().encode(splitted[0]);
             encptx = new Uluru.enc.Base64().encode(splitted[1].slice(0, -32));
-            mac = new Uluru.enc.Hex().encode(splitted[1].slice(32));
+            mac = new Uluru.enc.Hex().encode(splitted[1].slice(-32));
         }
         catch (e) {
             throw "Incorrectly formatted RSA ciphertext";
@@ -441,7 +439,7 @@ var Uluru;
             let padxdata = new Uint8Array(len - HDRlen);
             padxdata.set(data);
             let datalen = new Uint32Array([data.byteLength]);
-            let seed = crypto.getRandomValues(new Uint8Array(SEEDlen));
+            let seed = new Uluru.Random().fill(new Uint8Array(SEEDlen));
             let hash = new Uluru.Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen).hash;
             let header = merge(datalen, seed, hash);
             let mask = new Uluru.Keccak800().update(header).finalize(len - HDRlen).hash;
@@ -506,16 +504,12 @@ var Uluru;
 })(Uluru || (Uluru = {}));
 var Uluru;
 (function (Uluru) {
+    var _a;
     class Random {
-        constructor() {
-            this.pool = new Uint32Array(Random.capacity);
-            this.pointer = 0;
-            this.reset();
-        }
         static get secure() {
             return typeof crypto == "object";
         }
-        reset() {
+        static reset() {
             this.pointer = 0;
             if (Random.secure)
                 crypto.getRandomValues(this.pool);
@@ -524,29 +518,34 @@ var Uluru;
                     this.pool[i] = Math.floor(Math.random() * 0x100000000);
         }
         word() {
-            if (this.pointer >= this.pool.length)
-                this.reset();
-            return this.pool[this.pointer++];
+            if (Random.pointer >= Random.pool.length)
+                Random.reset();
+            return Random.pool[Random.pointer++];
         }
         fill(arr) {
+            let rand = Random;
             if (ArrayBuffer.isView(arr)) {
-                this.reset();
+                rand.reset();
                 let wrds = new Uint32Array(arr.buffer, arr.byteOffset, arr.byteLength >> 2);
-                for (let i = 0, l = wrds.length; i < l; i += this.pool.length) {
-                    wrds.set(new Uint32Array(this.pool.buffer, 0, Math.min((l - i), this.pool.length)), i);
-                    this.reset();
+                for (let i = 0, l = wrds.length; i < l; i += rand.pool.length) {
+                    wrds.set(new Uint32Array(rand.pool.buffer, 0, Math.min((l - i), rand.pool.length)), i);
+                    rand.reset();
                 }
                 let bytes = new Uint8Array(arr.buffer, arr.byteLength >> 2 << 2, arr.byteLength - (arr.byteLength >> 2 << 2));
                 for (let i = 0, l = bytes.length; i < l; i++)
                     bytes[i] = this.word();
             }
-            else
+            else {
                 for (let i = 0, l = arr.length; i < l; i++)
                     arr[i] = this.word();
+            }
             return arr;
         }
     }
+    _a = Random;
     Random.capacity = 16300;
+    Random.pool = new Uint32Array(_a.capacity);
+    Random.pointer = 0;
     Uluru.Random = Random;
 })(Uluru || (Uluru = {}));
 var Uluru;
@@ -590,9 +589,9 @@ var Uluru;
     }
     function randomBi(bitlength) {
         let result = n0;
-        let rand32 = typeof crypto == "object" ? (() => crypto.getRandomValues(new Uint32Array(1))[0]) : Math.random;
+        let rand = new Uluru.Random();
         for (let w = 0; w * 32 < bitlength; w++)
-            result = (result << Bi(32)) | Bi(rand32());
+            result = (result << Bi(32)) | Bi(rand.word());
         return result & mask(bitlength);
     }
     let smallprimes = [Bi(2)];
@@ -718,14 +717,19 @@ var Uluru;
             let hash = new Uluru.Keccak800().update(data).finalize(64).hash;
             return {
                 data,
-                signature: this.encrypt(data).data
+                signature: this.encrypt(hash).data
             };
         }
         verify(data, signature) {
-            data = typeof data == "string" ? new Uluru.enc.Utf8().encode(data) : data;
-            let hash = new Uluru.Keccak800().update(data).finalize(64).hash;
-            let authcode = this.decrypt(signature).data;
-            return hash.join(",") == authcode.join(",");
+            try {
+                data = typeof data == "string" ? new Uluru.enc.Utf8().encode(data) : data;
+                let hash = new Uluru.Keccak800().update(data).finalize(64).hash;
+                let authcode = this.decrypt(signature).data;
+                return hash.join(",") == authcode.join(",");
+            }
+            catch (e) {
+                return false;
+            }
         }
     }
     Uluru.RSAKey = RSAKey;

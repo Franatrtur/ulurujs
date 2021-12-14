@@ -107,7 +107,7 @@ namespace Uluru {
 			splitted = message.split("|")
 			symkey = new enc.Base64().encode(splitted[0])
 			encptx = new enc.Base64().encode(splitted[1].slice(0, -32))
-			mac = new enc.Hex().encode(splitted[1].slice(32))
+			mac = new enc.Hex().encode(splitted[1].slice(-32))
 		}
 		catch(e){
 			throw "Incorrectly formatted RSA ciphertext"

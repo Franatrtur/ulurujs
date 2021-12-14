@@ -119,11 +119,10 @@ declare namespace Uluru {
 declare namespace Uluru {
     class Random {
         static capacity: number;
-        private pool;
-        private pointer;
-        constructor();
+        private static pool;
+        private static pointer;
         static get secure(): boolean;
-        reset(): void;
+        static reset(): void;
         word(): number;
         fill(arr: Uint32Array | Uint8Array | Uint16Array): Uint8Array | Uint16Array | Uint32Array;
     }

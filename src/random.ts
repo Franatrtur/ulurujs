@@ -57,14 +57,15 @@ namespace Uluru {
 
 				for(let i = 0, l = bytes.length; i < l; i++)
 				//@ts-ignore
-					bytes[i] = rand.word()
+					bytes[i] = this.word()
 
 			}
-			else
+			else{
 			//@ts-ignore
 				for(let i = 0, l = arr.length; i < l; i++)
 				//@ts-ignore
-					arr[i] = rand.word()
+					arr[i] = this.word()
+			}
 
 			return arr
 
