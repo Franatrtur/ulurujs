@@ -14,15 +14,16 @@ namespace Uluru {
 
 			this.outputbytes = outputbytes
 			this.iterations = iterations
+			
 		}
 
-		compute(password: ArrayBufferView | string, salt: number = 0){
+		compute(password: ArrayBufferView | string, salt: ArrayBufferView = new Uint32Array()){
 
 			let result = new Uint8Array(this.outputbytes)
 			let block
 			let hasher = new Keccak800()
 
-			hasher.update(new Uint32Array([salt]))
+			hasher.update(salt)
 			hasher.finalize(0)
 			
 			for(let i = 0; i < this.iterations; i++){
@@ -32,9 +33,11 @@ namespace Uluru {
 
 				for(let b = 0; b < result.length; b++)
 					result[b] ^= block[b]
+
 			}
 
 			return { result }
+
 		}
 
 	}

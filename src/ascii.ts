@@ -19,7 +19,12 @@ namespace Uluru {
 
 				bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 	
-				return String.fromCharCode(...bytes)
+				let str: string[] = Array(bytes.length)
+
+				for(let i = 0, l = bytes.length; i < l; i++)
+					str[i] = String.fromCharCode(bytes[i])
+
+				return str.join("")
 				
 			}
 

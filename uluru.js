@@ -11,7 +11,10 @@ var Uluru;
             }
             decode(bytes) {
                 bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-                return String.fromCharCode(...bytes);
+                let str = Array(bytes.length);
+                for (let i = 0, l = bytes.length; i < l; i++)
+                    str[i] = String.fromCharCode(bytes[i]);
+                return str.join("");
             }
         }
         enc.Ascii = Ascii;
@@ -43,6 +46,7 @@ var Uluru;
                         out24 = 0;
                     }
                 }
+                return bytes;
             }
             decode(bytes) {
                 bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -52,7 +56,7 @@ var Uluru;
                 let mod3 = 2, u24 = 0;
                 for (let i = 0, l = bytes.length; i < l; i++) {
                     mod3 = i % 3;
-                    u24 = bytes[i] << (16 >>> mod3 & 24);
+                    u24 |= bytes[i] << (16 >>> mod3 & 24);
                     if (mod3 == 2 || bytes.length - i == 1) {
                         str.push(b64chars.charAt(u24 >>> 18 & 0x3f) +
                             b64chars.charAt(u24 >>> 12 & 0x3f) +
@@ -61,7 +65,8 @@ var Uluru;
                         u24 = 0;
                     }
                 }
-                return str.join("").slice(0, str.length - 2 + mod3) + b64paddings[2 - mod3];
+                str = str.join("");
+                return str.slice(0, str.length - 2 + mod3) + b64paddings[2 - mod3];
             }
         }
         enc.Base64 = Base64;
@@ -71,11 +76,11 @@ var Uluru;
 (function (Uluru) {
     const CONSTS = new Uint32Array(new Uluru.enc.Ascii().encode("expand 32-byte k").buffer);
     class ChaCha20 {
-        constructor(key, mac = true, nonce = 0, counter = 0) {
+        constructor(key, mac = true, nonce = new Uint32Array(3), counter = 0) {
             this.state = new Uint32Array(16);
             this.state.set(CONSTS);
             this.state.set(new Uint32Array(key.buffer, key.byteOffset, key.byteLength >> 2), 4);
-            this.state[13] = nonce;
+            this.state.set(new Uint32Array(nonce.buffer, nonce.byteOffset, nonce.byteLength >> 2), 12);
             for (let init = 0; init < 8; init++) {
                 for (let ev = 0; ev < 4; ev++)
                     this.QR(this.state, ev, ev + 4, ev + 8, ev + 12);
@@ -193,13 +198,14 @@ var Uluru;
 })(Uluru || (Uluru = {}));
 var Uluru;
 (function (Uluru) {
+    const SALTsize = 6;
     function encrypt(plaintext, password) {
-        let salt = new Uluru.Random().word();
+        let salt = new Uluru.Random().fill(new Uint8Array(SALTsize));
         let key = new Uluru.Pbkdf(32, 1000).compute(new Uluru.enc.Utf8().encode(password), salt).result;
         let encryptor = new Uluru.ChaCha20(key, true, salt);
         encryptor.update(new Uluru.enc.Utf8().encode(plaintext));
         let encrypted = encryptor.finalize();
-        return new Uluru.enc.Hex().decode(new Uint8Array(new Uint32Array([salt]).buffer)) +
+        return new Uluru.enc.Hex().decode(salt) +
             new Uluru.enc.Base64().decode(encrypted.data) +
             new Uluru.enc.Hex().decode(encrypted.mac);
     }
@@ -207,8 +213,8 @@ var Uluru;
     function decrypt(ciphertext, password) {
         let salt, cdata, macstr;
         try {
-            salt = new Uint32Array(new Uluru.enc.Hex().encode(ciphertext.slice(0, 8)).buffer)[0];
-            cdata = new Uluru.enc.Base64().encode(ciphertext.slice(8, -32));
+            salt = new Uluru.enc.Hex().encode(ciphertext.slice(0, SALTsize * 2));
+            cdata = new Uluru.enc.Base64().encode(ciphertext.slice(SALTsize * 2, -32));
             macstr = ciphertext.slice(-32);
         }
         catch (e) {
@@ -393,8 +399,7 @@ var Uluru;
                 this.data = new Uint32Array(this.data.buffer, 0, newlen >> 2);
                 padblock.fill(0);
                 this.padsigbytes = 0;
-                if (overflow > 0)
-                    this.append(new Uint8Array(data.buffer, data.byteOffset + data.byteLength - overflow, overflow));
+                this.append(new Uint8Array(data.buffer, data.byteOffset + data.byteLength - overflow, overflow));
             }
         }
         update(data) {
@@ -490,11 +495,11 @@ var Uluru;
             this.outputbytes = outputbytes;
             this.iterations = iterations;
         }
-        compute(password, salt = 0) {
+        compute(password, salt = new Uint32Array()) {
             let result = new Uint8Array(this.outputbytes);
             let block;
             let hasher = new Uluru.Keccak800();
-            hasher.update(new Uint32Array([salt]));
+            hasher.update(salt);
             hasher.finalize(0);
             for (let i = 0; i < this.iterations; i++) {
                 hasher.update(password);

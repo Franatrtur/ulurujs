@@ -34,12 +34,12 @@ declare namespace Uluru {
         pointer: number;
         sigbytes: number;
         reset(): void;
-        constructor(key: any, mac?: boolean, nonce?: number, counter?: number);
+        constructor(key: ArrayBufferView, mac?: boolean, nonce?: ArrayBufferView, counter?: number);
         QR(state: any, A: any, B: any, C: any, D: any): void;
         getmac(): false | Uint8Array;
         process(flush?: boolean): void;
-        append(data: any): void;
-        update(data: any): this;
+        append(data: string | ArrayBufferView): void;
+        update(data: string | ArrayBufferView): this;
         finalize(): {
             data: Uint8Array;
             mac: boolean | Uint8Array;
@@ -85,8 +85,8 @@ declare namespace Uluru {
         constructor();
         keccakF(state: any): void;
         process(flush?: boolean): void;
-        append(data: any): void;
-        update(data: any): this;
+        append(data: string | ArrayBufferView): void;
+        update(data: string | ArrayBufferView): this;
         finalize(outputbytes?: number): {
             toString(encoder?: enc.encoding): string;
             hash: Uint8Array;
@@ -111,7 +111,7 @@ declare namespace Uluru {
         outputbytes: number;
         iterations: number;
         constructor(outputbytes?: number, iterations?: number);
-        compute(password: ArrayBufferView | string, salt?: number): {
+        compute(password: ArrayBufferView | string, salt?: ArrayBufferView): {
             result: Uint8Array;
         };
     }

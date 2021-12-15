@@ -44,6 +44,8 @@ namespace Uluru {
 					}
 
 				}
+
+				return bytes
 				
 			}
 	
@@ -54,7 +56,7 @@ namespace Uluru {
 				if(typeof btoa == "function")
 					return btoa(new Ascii().decode(bytes))
 
-				let str = []
+				let str: string[] | string = []
 				let mod3 = 2, u24 = 0
 
 				for(let i = 0, l = bytes.length; i < l; i++){
@@ -66,7 +68,7 @@ namespace Uluru {
 					amogus*/
 
 					mod3 = i % 3
-					u24 = bytes[i] << (16 >>> mod3 & 24)
+					u24 |= bytes[i] << (16 >>> mod3 & 24)
 
 					if(mod3 == 2 || bytes.length - i == 1){
 
@@ -83,7 +85,10 @@ namespace Uluru {
 
 				}
 
-				return str.join("").slice(0, str.length - 2 + mod3) + b64paddings[2 - mod3]
+				str = str.join("")
+
+				return str.slice(0, str.length - 2 + mod3) + b64paddings[2 - mod3]
+
 			}
 
 		}

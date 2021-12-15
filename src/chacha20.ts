@@ -45,13 +45,13 @@ namespace Uluru {
 
 		}
 
-		constructor(key, mac = true, nonce = 0, counter = 0){
+		constructor(key: ArrayBufferView, mac = true, nonce: ArrayBufferView = new Uint32Array(3), counter = 0){
 
 			this.state = new Uint32Array(16)
 
 			this.state.set(CONSTS)
 			this.state.set(new Uint32Array(key.buffer, key.byteOffset, key.byteLength >> 2), 4)
-			this.state[13] = nonce
+			this.state.set(new Uint32Array(nonce.buffer, nonce.byteOffset, nonce.byteLength >> 2), 12)
 
 			//spread entropy
 			for(let init = 0; init < 8; init++){
@@ -191,7 +191,7 @@ namespace Uluru {
 
 		}
 
-		append(data){
+		append(data: string | ArrayBufferView){
 
 			data = typeof data == "string" ? new enc.Utf8().encode(data as string) : data
 
@@ -208,7 +208,7 @@ namespace Uluru {
 
 		}
 
-		update(data){
+		update(data: string | ArrayBufferView){
 			
 			this.append(data)
 			this.process(false)

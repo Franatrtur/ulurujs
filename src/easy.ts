@@ -3,9 +3,11 @@ namespace Uluru {
 	//functions for simplified user interaction
 	//using pbkdf with 1000 iterations to slow down the key generation
 
+	const SALTsize = 6
+
 	export function encrypt(plaintext, password){
 
-		let salt = new Random().word()
+		let salt = new Random().fill(new Uint8Array(SALTsize))
 
 		let key = new Pbkdf(32, 1000).compute(new enc.Utf8().encode(password), salt).result
 
@@ -15,7 +17,7 @@ namespace Uluru {
 
 		let encrypted = encryptor.finalize()
 
-		return  new enc.Hex().decode(new Uint8Array(new Uint32Array([salt]).buffer)) +
+		return  new enc.Hex().decode(salt) +
 				new enc.Base64().decode(encrypted.data) +
 				new enc.Hex().decode(encrypted.mac)
 	}
@@ -26,8 +28,8 @@ namespace Uluru {
 
 		try{
 
-			salt = new Uint32Array(new enc.Hex().encode(ciphertext.slice(0, 8)).buffer)[0]
-			cdata = new enc.Base64().encode(ciphertext.slice(8, -32))
+			salt = new enc.Hex().encode(ciphertext.slice(0, SALTsize * 2))
+			cdata = new enc.Base64().encode(ciphertext.slice(SALTsize * 2, -32))
 			macstr = ciphertext.slice(-32)
 		}
 		catch(e){

@@ -31,7 +31,7 @@ namespace Uluru {
 	//x plus 2 - next lane
 	const XP2 = new Uint8Array(25)
 
-	let nx, ny
+	let nx: number, ny: number
 
 	//walk matrix 5x5
 	for(let n = 0; n < 25; n++){
@@ -131,7 +131,7 @@ namespace Uluru {
 
 			}
 
-			if(flush){
+			if(flush){ //will run even if this.padsigbytes == 0, which is what we want
 
 				for(let w = 0; w < 16; w++)
 					this.state[w] ^= this.padblock[w]
@@ -139,9 +139,10 @@ namespace Uluru {
 				this.keccakF(this.state)
 
 			}
+
 		}
 
-		append(data){
+		append(data: string | ArrayBufferView){
 
 			data = typeof data == "string" ? new enc.Utf8().encode(data as string) : data
 
@@ -181,14 +182,13 @@ namespace Uluru {
 				padblock.fill(0)
 				this.padsigbytes = 0
 
-				if(overflow > 0)
-					this.append(new Uint8Array(data.buffer, data.byteOffset + data.byteLength - overflow, overflow))
+				this.append(new Uint8Array(data.buffer, data.byteOffset + data.byteLength - overflow, overflow))
 
 			}
 
 		}
 
-		update(data){
+		update(data: string | ArrayBufferView){
 
 			this.append(data)
 			this.process(false)
