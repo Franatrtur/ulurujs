@@ -18,6 +18,8 @@ namespace Uluru {
 
 			encode(str){
 
+				str = str.replace(/[^A-Fa-f0-9\+\/]/g, "").toLowerCase()
+
 				let bytes = new Uint8Array(str.length >> 1)
 		
 				for(let hxcode = 0; hxcode < str.length; hxcode += 2)

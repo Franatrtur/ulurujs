@@ -294,6 +294,7 @@ var Uluru;
         }
         class Hex {
             encode(str) {
+                str = str.replace(/[^A-Fa-f0-9\+\/]/g, "").toLowerCase();
                 let bytes = new Uint8Array(str.length >> 1);
                 for (let hxcode = 0; hxcode < str.length; hxcode += 2)
                     bytes[hxcode >> 1] = hexmap[str.slice(hxcode, hxcode + 2)];
@@ -572,7 +573,7 @@ var Uluru;
     const n1 = Bi(1);
     const n0 = Bi(0);
     const mask = bitlen => (n1 << Bi(bitlen)) - n1;
-    function bitlen(x) {
+    function bitLen(x) {
         let bits = 0;
         let bits32 = Bi(0x100000000);
         let stillbigger = true;
@@ -583,7 +584,7 @@ var Uluru;
         }
         return bits;
     }
-    function modpow(base, exponent, modulus) {
+    function modPow(base, exponent, modulus) {
         let result = n1;
         while (exponent) {
             if ((exponent & n1) == n1)
@@ -592,18 +593,6 @@ var Uluru;
             base = (base * base) % modulus;
         }
         return result;
-    }
-    function gcd(a, b) {
-        if (b > a)
-            [a, b] = [b, a];
-        while (true) {
-            if (b === n0)
-                return a;
-            a %= b;
-            if (a === n0)
-                return b;
-            b %= a;
-        }
     }
     function randomBi(bitlength) {
         let result = n0;
@@ -620,18 +609,18 @@ var Uluru;
         smallprimes.push(Bi(n));
     }
     function fermat(prime, iterations = 6) {
-        let randsize = Math.min(16, bitlen(prime) - 1);
+        let randsize = Math.min(16, bitLen(prime) - 1);
         let base;
         while (iterations--) {
             base = randomBi(randsize) + Bi(5);
-            if (modpow(base, prime - n1, prime) != n1)
+            if (modPow(base, prime - n1, prime) != n1)
                 return false;
         }
         return true;
     }
-    function millerrabin(prime, iterations = 6) {
+    function millerRabin(prime, iterations = 6) {
         let s = n0, d = prime - n1;
-        let randsize = Math.min(16, bitlen(prime) - 1);
+        let randsize = Math.min(16, bitLen(prime) - 1);
         while (!((d & n1) != n1)) {
             d >>= n1;
             s++;
@@ -640,11 +629,11 @@ var Uluru;
         let cant1 = n1, cant2 = prime - n1;
         iter: while (iterations--) {
             a = randomBi(randsize) + Bi(5);
-            x = modpow(a, d, prime);
+            x = modPow(a, d, prime);
             if (x == cant1 || x == cant2)
                 continue iter;
             for (let i = n0, l = s - n1; i < l; i++) {
-                x = modpow(x, Bi(2), prime);
+                x = modPow(x, Bi(2), prime);
                 if (x == cant1)
                     return false;
                 if (x == cant2)
@@ -654,22 +643,22 @@ var Uluru;
         }
         return true;
     }
-    function isprime(prime, iterations = 6) {
+    function isPrime(prime, iterations = 6) {
         for (let i = 0, l = smallprimes.length; i < l; i++)
             if (prime % smallprimes[i] == n0)
                 return prime == smallprimes[i];
-        return millerrabin(prime, iterations) && fermat(prime, iterations);
+        return millerRabin(prime, iterations) && fermat(prime, iterations);
     }
     function prime(bitlength, iterations = 6, attempts = 100000) {
         let candidate;
         for (let i = 0; i < attempts; i++) {
             candidate = randomBi(bitlength) | n1 | (n1 << Bi(bitlength - 1));
-            if (isprime(candidate, iterations))
+            if (isPrime(candidate, iterations))
                 return candidate;
         }
         throw "Cannot find a prime";
     }
-    function modinv(int, modulus) {
+    function modInv(int, modulus) {
         let mod0 = modulus;
         let y = n0, x = n1;
         let quot, temp;
@@ -684,10 +673,10 @@ var Uluru;
         }
         return x < 0 ? x + mod0 : x;
     }
-    function buffviewtobi(bufferview) {
+    function buffviewToBi(bufferview) {
         return Bi("0x" + new Uluru.enc.Hex().decode(new Uint8Array(bufferview.buffer, bufferview.byteOffset || 0, bufferview.byteLength || 0)));
     }
-    function bitobuffview(bigint) {
+    function biToBuffview(bigint) {
         let stred = bigint.toString(16);
         return new Uluru.enc.Hex().encode((stred.length % 2 == 1 ? "0" : "") + stred);
     }
@@ -697,7 +686,7 @@ var Uluru;
             this.M = Bi(mod);
         }
         static fromBufferViews(bufferview1, bufferview2) {
-            return new this(buffviewtobi(bufferview1), buffviewtobi(bufferview2));
+            return new this(buffviewToBi(bufferview1), buffviewToBi(bufferview2));
         }
         static fromString(str) {
             let splitted = str.split("<")[1].split(">")[0].split("|");
@@ -705,20 +694,20 @@ var Uluru;
         }
         toString() {
             return "<" +
-                new Uluru.enc.Base64().decode(bitobuffview(this.E)) +
+                new Uluru.enc.Base64().decode(biToBuffview(this.E)) +
                 "|" +
-                new Uluru.enc.Base64().decode(bitobuffview(this.M)) +
+                new Uluru.enc.Base64().decode(biToBuffview(this.M)) +
                 ">";
         }
         process(data) {
-            let databi = buffviewtobi(data);
+            let databi = buffviewToBi(data);
             if (databi >= this.M)
                 throw "Data integer too large";
-            return bitobuffview(modpow(databi, this.E, this.M));
+            return biToBuffview(modPow(databi, this.E, this.M));
         }
         encrypt(data) {
             data = typeof data == "string" ? new Uluru.enc.Utf8().encode(data) : data;
-            let msglen = (bitlen(this.M) >> 3) - 2 - Uluru.OAEP.hdrlen;
+            let msglen = (bitLen(this.M) >> 3) - 2 - Uluru.OAEP.hdrlen;
             if (data.byteLength > msglen)
                 throw "Message too long";
             return {
@@ -770,7 +759,7 @@ var Uluru;
             let prime1 = prime(bitlength), prime2 = prime(bitlength);
             let N = prime1 * prime2;
             let phi = (prime1 - n1) * (prime2 - n1);
-            let D = modinv(E, phi);
+            let D = modInv(E, phi);
             return new this(new RSAKey(E, N), new RSAKey(D, N));
         }
         toString() {
@@ -782,6 +771,25 @@ var Uluru;
     RSAKeyPair.publicprefix = PUBLICprefix;
     RSAKeyPair.privateprefix = PRIVATEprefix;
     Uluru.RSAKeyPair = RSAKeyPair;
+    const MODPgroup = buffviewToBi(new Uluru.enc.Base64().encode("///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxObIlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjftawv/XLb0Brft7jhr+1qJn6WunyQRfEsf5kkoZlHs5Fs9wgB8uKFjvwWY2kg2HFXTmmkWP6j9JM9fg2VdI9yjrZYcYvNWIIVSu57VKQdwlpZtZww1Tkq8mATxdGwIyhghfDKQXkYuNs474553LBgOhgObJ4Oi7Aeij7XFXfBvTFLJ3ivL9pVYFxg5lUl86pVq5RXSJhiY+gUQFXKOWoqqxC2tMxcNBFB6M6hVIavfHLpk7PuFBFjb7wqK6nFXXQYMfbOXD4Wm4eTHq/WujNsJM9cejJTgSiVhnc7j0iYa0u5r8S/6BtmKCGTYdgJzPshqZFIfKxgXeyAMu+EXV3phXWx3CYjAutlG4gjiT6B05asxQ9tb/OD9EI5LgtEgqSEIARpyPBKnh+bXiHGaEL26WyaZwycYavTiPBqUaDS2FQvaJYPpyirUTOjbu8LbBN6O+S6O/BQfvsqmKHxZR05rwF2ZspZPoJDDoiM7oYZRW+ftH2EpcM7i16+4G912IXBIHNAGkSfVsFqpk7TqmI2P3cGG/7fckKbAj030Nck0BjGZ//////////8="));
+    const GENERATOR = Bi(2);
+    class DiffieHellman {
+        constructor() {
+            this.E = randomBi(384) | (Bi(1) << Bi(383));
+        }
+        send() {
+            return biToBuffview(modPow(GENERATOR, this.E, MODPgroup));
+        }
+        receive(data) {
+            this.state = modPow(buffviewToBi(data), this.E, MODPgroup);
+        }
+        finalize(length) {
+            if (typeof this.state != "bigint")
+                throw "Key exchange cannot finalize without receiving";
+            return new Uluru.Pbkdf(length, 10).compute(biToBuffview(this.state));
+        }
+    }
+    Uluru.DiffieHellman = DiffieHellman;
 })(Uluru || (Uluru = {}));
 var Uluru;
 (function (Uluru) {

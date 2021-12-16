@@ -157,6 +157,15 @@ declare namespace Uluru {
         constructor(publickey: RSAKey, privatekey: RSAKey);
         toString(): string;
     }
+    class DiffieHellman {
+        E: bigint;
+        state: bigint;
+        send(): Uint8Array;
+        receive(data: any): void;
+        finalize(length: number): {
+            result: Uint8Array;
+        };
+    }
 }
 declare namespace Uluru {
     namespace enc {

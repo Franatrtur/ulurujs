@@ -7,7 +7,7 @@ namespace Uluru {
 
 	const mask = bitlen => (n1 << Bi(bitlen)) - n1
 
-	function bitlen(x: bigint){
+	function bitLen(x: bigint){
 		
 		let bits = 0 //means that for 0 the Number of bits is also 0
 		let bits32 = Bi(0x100000000)
@@ -27,7 +27,7 @@ namespace Uluru {
 
 	}
 
-	function modpow(base: bigint, exponent: bigint, modulus: bigint){
+	function modPow(base: bigint, exponent: bigint, modulus: bigint){
 
 		let result = n1
 
@@ -42,27 +42,6 @@ namespace Uluru {
 		}
 
 		return result
-
-	}
-
-	function gcd(a: bigint, b: bigint): bigint{
-				
-		if(b > a)
-			[a, b] = [b, a]
-
-		while(true){
-
-			if(b === n0)
-				return a
-
-			a %= b
-
-			if(a === n0)
-				return b
-
-			b %= a
-
-		}
 
 	}
 
@@ -94,14 +73,14 @@ namespace Uluru {
 
 	function fermat(prime: bigint, iterations = 6){
 
-		let randsize = Math.min(16, bitlen(prime) - 1)
+		let randsize = Math.min(16, bitLen(prime) - 1)
 		let base
 
 		while(iterations--){
 
 			base = randomBi(randsize) + Bi(5)
 
-			if(modpow(base, prime - n1, prime) != n1)
+			if(modPow(base, prime - n1, prime) != n1)
 				return false
 
 		}
@@ -109,10 +88,10 @@ namespace Uluru {
 		return true
 	}
 
-	function millerrabin(prime: bigint, iterations = 6){
+	function millerRabin(prime: bigint, iterations = 6){
 
 		let s = n0, d = prime - n1
-		let randsize = Math.min(16, bitlen(prime) - 1)
+		let randsize = Math.min(16, bitLen(prime) - 1)
 
 		while(!((d & n1) != n1)){
 
@@ -127,14 +106,14 @@ namespace Uluru {
 		iter: while(iterations--){
 
 			a = randomBi(randsize) + Bi(5)
-			x = modpow(a, d, prime)
+			x = modPow(a, d, prime)
 
 			if(x == cant1 || x == cant2)
 				continue iter
 
 			for(let i = n0, l = s - n1; i < l; i++){
 
-				x = modpow(x, Bi(2), prime)
+				x = modPow(x, Bi(2), prime)
 
 				if(x == cant1)
 					return false
@@ -152,13 +131,13 @@ namespace Uluru {
 
 	}
 
-	function isprime(prime: bigint, iterations = 6){
+	function isPrime(prime: bigint, iterations = 6){
 
 		for(let i = 0, l = smallprimes.length; i < l; i++)
 			if(prime % smallprimes[i] == n0)
 				return prime == smallprimes[i]
 
-		return millerrabin(prime, iterations) && fermat(prime, iterations)
+		return millerRabin(prime, iterations) && fermat(prime, iterations)
 
 	}
 
@@ -170,7 +149,7 @@ namespace Uluru {
 
 			candidate = randomBi(bitlength) | n1 | (n1 << Bi(bitlength - 1))
 
-			if(isprime(candidate, iterations))
+			if(isPrime(candidate, iterations))
 				return candidate
 
 		}
@@ -180,7 +159,7 @@ namespace Uluru {
 	}
 
 	//code design from: https://www.geeksforgeeks.org/multiplicative-inverse-under-modulo-m/#tablist3-tab7
-	function modinv(int: bigint, modulus: bigint): bigint{ //int != 1
+	function modInv(int: bigint, modulus: bigint): bigint{ //int != 1
 
 		let mod0 = modulus
 		let y = n0, x = n1
@@ -205,7 +184,7 @@ namespace Uluru {
 
 	}
 
-	function buffviewtobi(bufferview: ArrayBufferView){
+	function buffviewToBi(bufferview: ArrayBufferView){
 
 		return Bi("0x" + new enc.Hex().decode(
 			new Uint8Array(bufferview.buffer, bufferview.byteOffset || 0, bufferview.byteLength || 0)
@@ -213,7 +192,7 @@ namespace Uluru {
 
 	}
 
-	function bitobuffview(bigint: bigint){
+	function biToBuffview(bigint: bigint){
 
 		let stred = bigint.toString(16)
 		return new enc.Hex().encode((stred.length % 2 == 1 ? "0" : "") + stred)
@@ -226,7 +205,7 @@ namespace Uluru {
 
 		static fromBufferViews(bufferview1: ArrayBufferView, bufferview2: ArrayBufferView){
 
-			return new this(buffviewtobi(bufferview1), buffviewtobi(bufferview2))
+			return new this(buffviewToBi(bufferview1), buffviewToBi(bufferview2))
 
 		}
 
@@ -250,29 +229,29 @@ namespace Uluru {
 		toString(){
 
 			return "<" + 
-				new enc.Base64().decode(bitobuffview(this.E)) + 
+				new enc.Base64().decode(biToBuffview(this.E)) + 
 				"|" + 
-				new enc.Base64().decode(bitobuffview(this.M)) + 
+				new enc.Base64().decode(biToBuffview(this.M)) + 
 				">"
 
 		}
 
 		protected process(data: ArrayBufferView){
 
-			let databi = buffviewtobi(data)
+			let databi = buffviewToBi(data)
 
 			if(databi >= this.M)
 				throw "Data integer too large"
 
-			return bitobuffview(modpow(databi, this.E, this.M))
+			return biToBuffview(modPow(databi, this.E, this.M))
 
 		}
 
-		encrypt(data: ArrayBufferView | string){
+		public encrypt(data: ArrayBufferView | string){
 
 			data = typeof data == "string" ? new enc.Utf8().encode(data as string) : data
 
-			let msglen = (bitlen(this.M) >> 3) - 2 - OAEP.hdrlen
+			let msglen = (bitLen(this.M) >> 3) - 2 - OAEP.hdrlen
 
 			if(data.byteLength > msglen)
 				throw "Message too long"
@@ -283,7 +262,7 @@ namespace Uluru {
 
 		}
 
-		decrypt(data: ArrayBufferView){
+		public decrypt(data: ArrayBufferView){
 
 			return {
 				data: new OAEP().unpad(this.process(data)).data
@@ -291,7 +270,7 @@ namespace Uluru {
 
 		}
 
-		sign(data: ArrayBufferView | string){
+		public sign(data: ArrayBufferView | string){
 
 			data = typeof data == "string" ? new enc.Utf8().encode(data as string) : data
 
@@ -304,7 +283,7 @@ namespace Uluru {
 
 		}
 
-		verify(data: ArrayBufferView | string, signature: ArrayBufferView){
+		public verify(data: ArrayBufferView | string, signature: ArrayBufferView){
 
 			try{
 
@@ -358,7 +337,7 @@ namespace Uluru {
 
 			let N = prime1 * prime2
 			let phi = (prime1 - n1) * (prime2 - n1)
-			let D = modinv(E, phi)
+			let D = modInv(E, phi)
 
 			return new this(new RSAKey(E, N), new RSAKey(D, N))
 
@@ -378,6 +357,45 @@ namespace Uluru {
 
 			return PUBLICprefix[0] + this.public.toString() + PUBLICprefix[1] + "\n" +
 				PRIVATEprefix[0] + this.private.toString() + PRIVATEprefix[1]
+
+		}
+
+	}
+
+
+	/**
+	 * 4096bit diffie-hellman group constant from
+	 * @see https://www.rfc-editor.org/rfc/rfc3526
+	 */
+	const MODPgroup = buffviewToBi(new enc.Base64().encode(
+		"///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxObIlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjftawv/XLb0Brft7jhr+1qJn6WunyQRfEsf5kkoZlHs5Fs9wgB8uKFjvwWY2kg2HFXTmmkWP6j9JM9fg2VdI9yjrZYcYvNWIIVSu57VKQdwlpZtZww1Tkq8mATxdGwIyhghfDKQXkYuNs474553LBgOhgObJ4Oi7Aeij7XFXfBvTFLJ3ivL9pVYFxg5lUl86pVq5RXSJhiY+gUQFXKOWoqqxC2tMxcNBFB6M6hVIavfHLpk7PuFBFjb7wqK6nFXXQYMfbOXD4Wm4eTHq/WujNsJM9cejJTgSiVhnc7j0iYa0u5r8S/6BtmKCGTYdgJzPshqZFIfKxgXeyAMu+EXV3phXWx3CYjAutlG4gjiT6B05asxQ9tb/OD9EI5LgtEgqSEIARpyPBKnh+bXiHGaEL26WyaZwycYavTiPBqUaDS2FQvaJYPpyirUTOjbu8LbBN6O+S6O/BQfvsqmKHxZR05rwF2ZspZPoJDDoiM7oYZRW+ftH2EpcM7i16+4G912IXBIHNAGkSfVsFqpk7TqmI2P3cGG/7fckKbAj030Nck0BjGZ//////////8="
+	))
+
+	const GENERATOR = Bi(2)
+
+	export class DiffieHellman {
+
+		E: bigint = randomBi(384) | (Bi(1) << Bi(383))
+		state: bigint
+
+		send(){
+
+			return biToBuffview(modPow(GENERATOR, this.E, MODPgroup))
+
+		}
+
+		receive(data){
+
+			this.state = modPow(buffviewToBi(data), this.E, MODPgroup)
+
+		}
+
+		finalize(length: number){
+
+			if(typeof this.state != "bigint")
+				throw "Key exchange cannot finalize without receiving"
+
+			return new Pbkdf(length, 10).compute(biToBuffview(this.state))
 
 		}
 

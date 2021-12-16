@@ -25,9 +25,9 @@ function time(label, callback, iterations = 1, ...args){
 	let average = times.reduce((a, b) => a + b, 0) / times.length
 
 	console.log(
-		`>${ctr}> ${iterations} iterations of ${label} finished in ${total.toFixed(2)}ms` +
+		`>${ctr}> ${iterations} iterations of ${label} finished in ${total.toFixed(1)}ms` +
 		`, average: ${average.toFixed(2)}ms` +
-		`, iters/sec: ${(times.length / average).toFixed(2)}`
+		`, iters/sec: ${(1000 / average).toFixed(2)}`
 	)
 
 	times.sort((a, b) => a - b)
