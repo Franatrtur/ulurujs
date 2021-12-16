@@ -1,3 +1,12 @@
+var crypto = typeof crypto == "object" ? crypto : function () {
+    var cryp = require("crypto");
+    return {
+        getRandomValues(data) {
+            cryp.randomFillSync(data);
+            return data;
+        }
+    };
+}();
 var Uluru;
 (function (Uluru) {
     let enc;

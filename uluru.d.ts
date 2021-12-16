@@ -1,3 +1,4 @@
+declare var crypto: Crypto;
 declare namespace Uluru {
     interface algorithm {
         update: (data: ArrayBufferView | string) => algorithm;

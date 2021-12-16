@@ -21,7 +21,8 @@
   "scripts": {
     "test": "node --trace-uncaught test/test",
     "build": "tsc",
-    "compress": "node build/minify-main"
+    "compress": "node build/minify-main",
+    "bench": "node test/benchmarks.js"
   },
   "keywords": [
     "encryption",
