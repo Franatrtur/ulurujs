@@ -781,12 +781,12 @@ var Uluru;
             return biToBuffview(modPow(GENERATOR, this.E, MODPgroup));
         }
         receive(data) {
-            this.state = modPow(buffviewToBi(data), this.E, MODPgroup);
+            this.secret = modPow(buffviewToBi(data), this.E, MODPgroup);
         }
         finalize(length) {
-            if (typeof this.state != "bigint")
+            if (typeof this.secret != "bigint")
                 throw "Key exchange cannot finalize without receiving";
-            return new Uluru.Pbkdf(length, 10).compute(biToBuffview(this.state));
+            return new Uluru.Pbkdf(length, 10).compute(biToBuffview(this.secret));
         }
     }
     Uluru.DiffieHellman = DiffieHellman;

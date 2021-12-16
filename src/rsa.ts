@@ -376,7 +376,7 @@ namespace Uluru {
 	export class DiffieHellman {
 
 		E: bigint = randomBi(384) | (Bi(1) << Bi(383))
-		state: bigint
+		secret: bigint
 
 		send(){
 
@@ -386,16 +386,16 @@ namespace Uluru {
 
 		receive(data){
 
-			this.state = modPow(buffviewToBi(data), this.E, MODPgroup)
+			this.secret = modPow(buffviewToBi(data), this.E, MODPgroup)
 
 		}
 
 		finalize(length: number){
 
-			if(typeof this.state != "bigint")
+			if(typeof this.secret != "bigint")
 				throw "Key exchange cannot finalize without receiving"
 
-			return new Pbkdf(length, 10).compute(biToBuffview(this.state))
+			return new Pbkdf(length, 10).compute(biToBuffview(this.secret))
 
 		}
 

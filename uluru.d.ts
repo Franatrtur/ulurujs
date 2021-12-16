@@ -159,7 +159,7 @@ declare namespace Uluru {
     }
     class DiffieHellman {
         E: bigint;
-        state: bigint;
+        secret: bigint;
         send(): Uint8Array;
         receive(data: any): void;
         finalize(length: number): {
