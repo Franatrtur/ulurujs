@@ -1,5 +1,7 @@
 var Uluru = Uluru || require("../uluru")
 
+var allpassed = true
+
 function assert(label, condition){
 
 	if(!!condition)
@@ -7,17 +9,23 @@ function assert(label, condition){
 
 	else{
 		console.log("\x1b[31m%s\x1b[0m❌", label)
-		throw "Assertion failed"
+		allpassed = false
 	}
 }
 
 assert("uluru is loaded", typeof Uluru == "object")
 
-assert("ascii encode works", new Uluru.enc.Ascii().encode("ABabč ?😍").join(",") == "65,66,97,98,13,32,63,61,13")
-assert("ascii decode works",
-	new Uluru.enc.Ascii().decode(new Uint8Array([
-		0,1,11,12,13,14,32,33,34,49,198,230,250,100,196,141,240,159,152,141
-	])) == '\x00\x01\v\f\r\x0E !"1ÆæúdÄ\x8Dð\x9F\x98\x8D'
+try{
+	assert("ascii encode works", new Uluru.enc.Ascii().encode("\x10ABabč ?😍").join(",") == "16,65,66,97,98,13,32,63,61,13")
+	assert("ascii decode works",
+		new Uluru.enc.Ascii().decode(new Uint8Array([
+			0,1,11,12,13,14,32,33,34,49,198,230,250,100,196,141,240,159,152,141
+		])) == '\x00\x01\v\f\r\x0E !"1ÆæúdÄ\x8Dð\x9F\x98\x8D'
+	)
+
+assert("base64 encode works", new Uluru.enc.Base64().encode("9dr2AnGW6y3aghaC").join(",") == "245,218,246,2,113,150,235,45,218,130,22,130")
+assert("base64 decode works",
+new Uluru.enc.Base64().decode(new Uint8Array([245,218,246,2,113,150,235,45,218,130,22,130])) == '9dr2AnGW6y3aghaC'
 )
 
 assert("hex encode works", new Uluru.enc.Hex().encode("1019deadbeefe").join(",") == "16,25,222,173,190,239")
@@ -46,6 +54,19 @@ assert("hashing works", Uluru.hash("").startsWith("86a55d03") && Uluru.hash("A")
 
 assert("keccak squeezing", new Uluru.Keccak800().update("TOOTH").finalize(256).toString().startsWith(new Uluru.Keccak800().update("TOOTH").finalize(32).toString()))
 
-let testplaintext = "čeč\x11plaintext!€    有".repeat(20)
+assert("old ciphertext", "ahoj" == Uluru.decrypt("e6f23a3bcc1eTYsLzQ==7e90cb21f2d0a7d35bd218c7b6549c66", "k"))
+
+let testplaintext = "čeč\x11plaintext!€    有".repeat(600)
 let passwtoken = Math.random().toString()
-assert("encrypt and decrypt works", testplaintext == Uluru.decrypt(Uluru.encrypt(testplaintext, passwtoken), passwtoken))
+assert("symmetric encryption", testplaintext == Uluru.decrypt(Uluru.encrypt(testplaintext, passwtoken), passwtoken))
+
+
+}
+catch(e){
+	assert("Exception was thrown", false)
+	Uluru.ERROR = e
+}
+
+
+if(!allpassed)
+	console.log("\x1b[31mTEST FAILED\x1b[0m")
