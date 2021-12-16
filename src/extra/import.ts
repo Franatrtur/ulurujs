@@ -1,5 +1,5 @@
 //@ts-ignore
-var crypto = typeof crypto == "object" ? crypto : this == global ? function(){
+var crypto = typeof crypto == "object" ? crypto : typeof global == "object" ? function(){
 	//@ts-ignore
 	var cryp = require("crypto")
 	return {

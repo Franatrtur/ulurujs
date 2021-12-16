@@ -24,7 +24,7 @@ namespace Uluru {
 
 		static get secure(){
 
-			return typeof crypto == "object" && crypto.hasOwnProperty("getRandomValues")
+			return typeof crypto == "object" && typeof crypto["getRandomValues"] == "function"
 
 		}
 

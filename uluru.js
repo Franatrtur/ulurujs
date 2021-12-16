@@ -1,4 +1,4 @@
-var crypto = typeof crypto == "object" ? crypto : this == global ? function () {
+var crypto = typeof crypto == "object" ? crypto : typeof global == "object" ? function () {
     var cryp = require("crypto");
     return {
         getRandomValues(data) {
@@ -537,7 +537,7 @@ var Uluru;
     }
     class Random {
         static get secure() {
-            return typeof crypto == "object" && crypto.hasOwnProperty("getRandomValues");
+            return typeof crypto == "object" && typeof crypto["getRandomValues"] == "function";
         }
         word() {
             if (Pointer >= CAPACITY)
