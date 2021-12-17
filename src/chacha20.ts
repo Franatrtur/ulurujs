@@ -32,7 +32,7 @@ namespace Uluru {
 		public pointer: number
 		public sigbytes: number
 
-		reset(){
+		public reset(){
 
 			this.xstate = new Uint32Array(16)
 
@@ -76,7 +76,7 @@ namespace Uluru {
 
 		}
 
-		QR(state, A, B, C, D){
+		private QR(state, A, B, C, D){
 
 			state[A] += state[B]
 			state[D] ^= state[A]
@@ -96,7 +96,7 @@ namespace Uluru {
 
 		}
 
-		getmac(){
+		public getmac(){
 
 			if(!this.domac)
 				return false
@@ -127,7 +127,7 @@ namespace Uluru {
 
 		}
 
-		process(flush = false){
+		private process(flush = false){
 
 			let blocks = (flush ? Math.ceil : Math.floor)((this.sigbytes - this.pointer) / 16)
 
@@ -191,7 +191,7 @@ namespace Uluru {
 
 		}
 
-		append(data: string | ArrayBufferView){
+		private append(data: string | ArrayBufferView){
 
 			data = typeof data == "string" ? new enc.Utf8().encode(data as string) : data
 
@@ -208,7 +208,7 @@ namespace Uluru {
 
 		}
 
-		update(data: string | ArrayBufferView){
+		public update(data: string | ArrayBufferView){
 			
 			this.append(data)
 			this.process(false)
@@ -217,7 +217,7 @@ namespace Uluru {
 
 		}
 
-		finalize(){
+		public finalize(){
 
 			this.process(true)
 

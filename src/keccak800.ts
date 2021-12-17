@@ -63,7 +63,7 @@ namespace Uluru {
 		private padblock: Uint32Array
 		private padsigbytes: number
 
-		reset(){
+		public reset(){
 
 			this.state = new Uint32Array(25)
 
@@ -83,7 +83,7 @@ namespace Uluru {
 
 		}
 
-		keccakF(state){
+		private keccakF(state){
 
 			let temp = this.temp,
 				theta = this.theta
@@ -117,7 +117,7 @@ namespace Uluru {
 			}
 		}
 
-		process(flush = false){
+		private process(flush = false){
 
 			let blocks = (this.data.length - this.pointer) / 16
 
@@ -142,7 +142,7 @@ namespace Uluru {
 
 		}
 
-		append(data: string | ArrayBufferView){
+		private append(data: string | ArrayBufferView){
 
 			data = typeof data == "string" ? new enc.Utf8().encode(data as string) : data
 
@@ -188,7 +188,7 @@ namespace Uluru {
 
 		}
 
-		update(data: string | ArrayBufferView){
+		public update(data: string | ArrayBufferView){
 
 			this.append(data)
 			this.process(false)
@@ -197,7 +197,7 @@ namespace Uluru {
 
 		}
 
-		finalize(outputbytes = 32){
+		public finalize(outputbytes = 32){
 
 			this.process(true)
 

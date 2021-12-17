@@ -198,7 +198,6 @@ namespace Uluru {
 		return new enc.Hex().encode((stred.length % 2 == 1 ? "0" : "") + stred)
 
 	}
-	
 
 
 	export class RSAKey {
@@ -236,7 +235,7 @@ namespace Uluru {
 
 		}
 
-		protected process(data: ArrayBufferView){
+		private process(data: ArrayBufferView){
 
 			let databi = buffviewToBi(data)
 
@@ -378,19 +377,19 @@ namespace Uluru {
 		E: bigint = randomBi(384) | (Bi(1) << Bi(383))
 		secret: bigint
 
-		send(){
+		public send(){
 
 			return biToBuffview(modPow(GENERATOR, this.E, MODPgroup))
 
 		}
 
-		receive(data){
+		public receive(data){
 
 			this.secret = modPow(buffviewToBi(data), this.E, MODPgroup)
 
 		}
 
-		finalize(length = 32){
+		public finalize(length = 32){
 
 			if(typeof this.secret != "bigint")
 				throw "Key exchange cannot finalize without receiving"

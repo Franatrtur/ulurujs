@@ -28,7 +28,7 @@ namespace Uluru {
 
 		}
 
-		word(){
+		public word(){
 
 			if(Pointer >= CAPACITY)
 				reset()
@@ -37,7 +37,7 @@ namespace Uluru {
 
 		}
 
-		fill(arr: Uint32Array | Uint8Array | Uint16Array){
+		public fill(arr: Uint32Array | Uint8Array | Uint16Array){
 
 			if(ArrayBuffer.isView(arr)){
 

@@ -17,7 +17,7 @@ namespace Uluru {
 			
 		}
 
-		compute(password: ArrayBufferView | string, salt: ArrayBufferView = new Uint32Array()){
+		public compute(password: ArrayBufferView | string, salt: ArrayBufferView = new Uint32Array()){
 
 			let result = new Uint8Array(this.outputbytes)
 			let block
