@@ -390,7 +390,7 @@ namespace Uluru {
 
 		}
 
-		finalize(length: number){
+		finalize(length = 32){
 
 			if(typeof this.secret != "bigint")
 				throw "Key exchange cannot finalize without receiving"

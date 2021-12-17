@@ -162,7 +162,7 @@ declare namespace Uluru {
         secret: bigint;
         send(): Uint8Array;
         receive(data: any): void;
-        finalize(length: number): {
+        finalize(length?: number): {
             result: Uint8Array;
         };
     }

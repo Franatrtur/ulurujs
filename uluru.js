@@ -783,7 +783,7 @@ var Uluru;
         receive(data) {
             this.secret = modPow(buffviewToBi(data), this.E, MODPgroup);
         }
-        finalize(length) {
+        finalize(length = 32) {
             if (typeof this.secret != "bigint")
                 throw "Key exchange cannot finalize without receiving";
             return new Uluru.Pbkdf(length, 10).compute(biToBuffview(this.secret));
