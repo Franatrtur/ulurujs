@@ -395,7 +395,7 @@ namespace Uluru {
 			if(typeof this.secret != "bigint")
 				throw "Key exchange cannot finalize without receiving"
 
-			return new Pbkdf(length, 10).compute(biToBuffview(this.secret))
+			return new Pbkdf(length, 2).compute(biToBuffview(this.secret))
 
 		}
 

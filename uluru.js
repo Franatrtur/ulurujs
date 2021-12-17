@@ -786,7 +786,7 @@ var Uluru;
         finalize(length = 32) {
             if (typeof this.secret != "bigint")
                 throw "Key exchange cannot finalize without receiving";
-            return new Uluru.Pbkdf(length, 10).compute(biToBuffview(this.secret));
+            return new Uluru.Pbkdf(length, 2).compute(biToBuffview(this.secret));
         }
     }
     Uluru.DiffieHellman = DiffieHellman;
