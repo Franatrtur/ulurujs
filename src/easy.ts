@@ -5,7 +5,7 @@ namespace Uluru {
 
 	const SALTsize = 6
 
-	export function encrypt(plaintext, password){
+	export function encrypt(plaintext: any, password: string){
 
 		let salt = new Random().fill(new Uint8Array(SALTsize))
 
@@ -13,7 +13,7 @@ namespace Uluru {
 
 		let encryptor = new ChaCha20(key, true, salt)
 
-		encryptor.update(new enc.Utf8().encode(plaintext))
+		encryptor.update(new enc.Utf8().encode(JSON.stringify(plaintext)))
 
 		let encrypted = encryptor.finalize()
 
@@ -22,15 +22,15 @@ namespace Uluru {
 				new enc.Hex().decode(encrypted.mac)
 	}
 
-	export function decrypt(ciphertext, password){
+	export function decrypt(ciphertext: string, password: string): any{
 
-		let salt, cdata, macstr
+		let salt, cdata, mac
 
 		try{
 
 			salt = new enc.Hex().encode(ciphertext.slice(0, SALTsize * 2))
 			cdata = new enc.Base64().encode(ciphertext.slice(SALTsize * 2, -32))
-			macstr = ciphertext.slice(-32)
+			mac = new enc.Hex().encode(ciphertext.slice(-32))
 		}
 		catch(e){
 			throw "Incorrectly formated ciphertext"
@@ -44,10 +44,11 @@ namespace Uluru {
 
 		let decrypted = decryptor.finalize()
 
-		if(new enc.Hex().decode(decrypted.mac) != macstr)
+		if(!decryptor.verify(mac))
 			throw "Invalid authentication"
 
-		return new enc.Utf8().decode(decrypted.data)
+		return JSON.parse(new enc.Utf8().decode(decrypted.data))
+
 	}
 
 	export function hash(text){
@@ -91,9 +92,11 @@ namespace Uluru {
 			key.encrypt(symkey).data
 		)
 
-		let encptx = new ChaCha20(symkey, true).update(
-			new enc.Utf8().encode(message)
-		).finalize()
+		let encryptor = new ChaCha20(symkey, true)
+
+		encryptor.update(new enc.Utf8().encode(message))
+
+		let encptx = encryptor.finalize()
 
 		return encsymkey + "|" + new enc.Base64().decode(encptx.data) + new enc.Hex().decode(encptx.mac)
 
@@ -116,11 +119,11 @@ namespace Uluru {
 		}
 
 		symkey = key.decrypt(symkey).data
-		encptx = new ChaCha20(symkey, true).update(
-			encptx
-		).finalize()
+		let decryptor = new ChaCha20(symkey, true)
+		
+		encptx = decryptor.update(encptx).finalize()
 
-		if(encptx.mac.join(",") != mac.join(","))
+		if(!decryptor.verify(mac))
 			throw "Invalid RSA message authentication code"
 
 		return new enc.Utf8().decode(encptx.data)

@@ -1,43 +1,54 @@
 namespace Uluru {
 	
-	//nothing-up-my-sleeve constants
+	//nothing-up-my-sleeve constants "expand 32-byte k"
 	const CONSTS = new Uint32Array(
-		new enc.Ascii().encode("expand 32-byte k").buffer
+		[0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]
 	)
 
 	/**
 	 * A modified version of the chacha20 stream cipher
 	 * the cipher uses the original chacha function and rounds
-	 * except that we diffuse the entropy of the key with some 8 doublerounds of column/row rounds
-	 * our nonce and counter are 32bit
+	 * except that we diffuse the entropy of the key with 20 column/row rounds
+	 * to create a mask that we add to the permuted state instead of the original
+	 * nonce is a 96bit (4-word) bufferview and counter is one 32bit word (number)
 	 * 
 	 * it uses my custom MACing system that is *symmetrical*
 	 * so the cipher can still be used in both ways, encrypting will produce the same mac as decrypting
-	 * this is done by computing two checksums, one for the plaintext, other one for the ciphertext
-	 * then we xor them and permute the resulting mac
+	 * this is done by computing two 4-word checksums, one for the plaintext, other one for the ciphertext
+	 * then we combine them and permute, resulting in a 128bit mac
 	 */
 
 	export class ChaCha20 implements algorithm {
 		
-		private data: Uint32Array | Uint8Array
-		private state: Uint32Array
-		private xstate: Uint32Array
-		private prectr: number
-		private ctr: number
+		private state: Uint32Array = new Uint32Array(16)
+		private xstate: Uint32Array = new Uint32Array(16)
+		private mask: Uint32Array = new Uint32Array(16)
 		
+		public domac: boolean
 		private cmac: Uint32Array | false
 		private pmac: Uint32Array | false
-		public domac: boolean
 		
+		private data: Uint32Array | Uint8Array
 		public pointer: number
 		public sigbytes: number
 
 		public reset(){
 
-			this.xstate = new Uint32Array(16)
+			this.xstate.fill(0)
 
-			this.pmac = this.domac ? new Uint32Array(CONSTS) : false
-			this.cmac = this.domac ? new Uint32Array(CONSTS) : false
+			this.pmac = this.cmac = false
+
+			//add in the spreaded entropy to initialize the mac states
+			if(this.domac){
+
+				this.pmac = new Uint32Array(4)
+
+				for(let i = 0; i < 16; i++)
+					this.pmac[i & 3] ^= this.mask[i]
+
+				this.cmac = this.pmac.slice()
+	
+			}
 
 			this.data = new Uint32Array(0)
 			this.pointer = 0
@@ -47,36 +58,46 @@ namespace Uluru {
 
 		constructor(key: ArrayBufferView, mac = true, nonce: ArrayBufferView = new Uint32Array(3), counter = 0){
 
-			this.state = new Uint32Array(16)
-
 			this.state.set(CONSTS)
 			this.state.set(new Uint32Array(key.buffer, key.byteOffset, key.byteLength >> 2), 4)
 			this.state.set(new Uint32Array(nonce.buffer, nonce.byteOffset, nonce.byteLength >> 2), 12)
+			this.state[15] = counter
+
+			this.mask.set(this.state)
+			this.mask[15] = 0 //erase the counter
 
 			//spread entropy
-			for(let init = 0; init < 8; init++){
+			for(let init = 0; init < 10; init++){
 
 				//cols
 				for(let ev = 0; ev < 4; ev++)
-					this.QR(this.state, ev, ev + 4, ev + 8, ev + 12)
+					this.QR(this.mask, ev, ev + 4, ev + 8, ev + 12)
 
 				//rows
 				for(let od = 0; od < 16; od += 4)
-					this.QR(this.state, od, od + 1, od + 2, od + 3)
+					this.QR(this.mask, od, od + 1, od + 2, od + 3)
 
 	 		}
 
-	 		this.prectr = this.state[15]
-			this.state[15] ^= counter
-
-			this.ctr = counter
-
 			this.domac = !!mac
+
 			this.reset()
 
 		}
 
-		private QR(state, A, B, C, D){
+		public get counter(){
+
+			return this.state[15]
+
+		}
+
+		public set counter(ctr){
+
+			this.state[15] = ctr
+
+		}
+
+		private QR(state: Uint32Array, A: number, B: number, C: number, D: number){
 
 			state[A] += state[B]
 			state[D] ^= state[A]
@@ -105,13 +126,14 @@ namespace Uluru {
 				cm = this.cmac
 
 			let mac = new Uint32Array([
-				pm[0] ^ cm[0],
-				pm[1] ^ cm[1],
-				pm[2] ^ cm[2],
-				pm[3] ^ cm[3],
+				pm[0] + cm[0],
+				pm[1] + cm[1],
+				pm[2] + cm[2],
+				pm[3] + cm[3],
 			])
 
-			for(let mr = 0; mr < 4; mr++){
+			//20 quarter rounds
+			for(let mr = 0; mr < 5; mr++){
 
 				this.QR(mac, 0, 1, 2, 3)
 				this.QR(mac, 3, 0, 1, 2)
@@ -121,7 +143,7 @@ namespace Uluru {
 			}
 
 			for(let re = 0; re < 4; re++)
-				mac[re] += pm[re] + cm[re]
+				mac[re] ^= pm[re] ^ cm[re]
 
 			return new Uint8Array(mac.buffer)
 
@@ -135,8 +157,6 @@ namespace Uluru {
 
 			let end = Math.ceil(this.sigbytes / 4) - 1
 			let erase = 4 - this.sigbytes % 4
-
-			this.state[15] = this.prectr ^ (this.ctr + (this.pointer >> 4))
 
 			for(let b = 0; b < blocks; b++){
 
@@ -165,7 +185,7 @@ namespace Uluru {
 				for(let i = 0; i < 16 && this.pointer + i <= end; i++){
 
 					ptw = this.data[this.pointer + i]
-					ctw = ptw ^ (this.xstate[i] + this.state[i])
+					ctw = ptw ^ (this.xstate[i] + this.mask[i])
 
 					if(this.pointer + i == end)
 						ctw = ctw << erase * 8 >>> erase * 8 //erase the needless bytes, keeping in mind that uint32array is little-endian!
@@ -177,8 +197,9 @@ namespace Uluru {
 						this.pmac[i & 3] ^= ptw + this.xstate[i] // i & 3 is the same as i % 4
 						this.cmac[i & 3] ^= ctw + this.xstate[i]
 
-						this.QR(this.pmac, i & 3, (i + 1) & 3, (i + 2) & 3, (i + 3) & 3)
-						this.QR(this.cmac, i & 3, (i + 1) & 3, (i + 2) & 3, (i + 3) & 3)
+						this.QR(this.pmac as Uint32Array, (i + 3) & 3, i & 3, (i + 1) & 3, (i + 2) & 3)
+						this.QR(this.cmac as Uint32Array, (i + 3) & 3, i & 3, (i + 1) & 3, (i + 2) & 3)
+						
 					}
 					
 				}
@@ -208,8 +229,17 @@ namespace Uluru {
 
 		}
 
+		public verify(mac: ArrayBufferView){
+
+			if(!this.domac)
+				return null
+
+			return (this.getmac() as Uint8Array).join(",") === new Uint8Array(mac.buffer, mac.byteOffset, mac.byteLength).join(",")
+
+		}
+
 		public update(data: string | ArrayBufferView){
-			
+
 			this.append(data)
 			this.process(false)
 

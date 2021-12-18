@@ -24,22 +24,24 @@ declare namespace Uluru {
 }
 declare namespace Uluru {
     class ChaCha20 implements algorithm {
-        private data;
         private state;
         private xstate;
-        private prectr;
-        private ctr;
+        private mask;
+        domac: boolean;
         private cmac;
         private pmac;
-        domac: boolean;
+        private data;
         pointer: number;
         sigbytes: number;
         reset(): void;
         constructor(key: ArrayBufferView, mac?: boolean, nonce?: ArrayBufferView, counter?: number);
-        QR(state: any, A: any, B: any, C: any, D: any): void;
+        get counter(): number;
+        set counter(ctr: number);
+        private QR;
         getmac(): false | Uint8Array;
-        process(flush?: boolean): void;
-        append(data: string | ArrayBufferView): void;
+        private process;
+        private append;
+        verify(mac: ArrayBufferView): boolean;
         update(data: string | ArrayBufferView): this;
         finalize(): {
             data: Uint8Array;
@@ -48,8 +50,8 @@ declare namespace Uluru {
     }
 }
 declare namespace Uluru {
-    function encrypt(plaintext: any, password: any): string;
-    function decrypt(ciphertext: any, password: any): string;
+    function encrypt(plaintext: any, password: string): string;
+    function decrypt(ciphertext: string, password: string): any;
     function hash(text: any): string;
     function rsaGenerate(): string;
     function rsaSign(message: any, privkeystr: any): string;
@@ -84,9 +86,9 @@ declare namespace Uluru {
         private padsigbytes;
         reset(): void;
         constructor();
-        keccakF(state: any): void;
-        process(flush?: boolean): void;
-        append(data: string | ArrayBufferView): void;
+        private keccakF;
+        private process;
+        private append;
         update(data: string | ArrayBufferView): this;
         finalize(outputbytes?: number): {
             toString(encoder?: enc.encoding): string;
@@ -133,7 +135,7 @@ declare namespace Uluru {
         M: bigint;
         constructor(exponent: bigint | number, mod: bigint | number);
         toString(): string;
-        protected process(data: ArrayBufferView): Uint8Array;
+        private process;
         encrypt(data: ArrayBufferView | string): {
             data: Uint8Array;
         };

@@ -83,32 +83,45 @@ var Uluru;
 })(Uluru || (Uluru = {}));
 var Uluru;
 (function (Uluru) {
-    const CONSTS = new Uint32Array(new Uluru.enc.Ascii().encode("expand 32-byte k").buffer);
+    const CONSTS = new Uint32Array([0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]);
     class ChaCha20 {
         constructor(key, mac = true, nonce = new Uint32Array(3), counter = 0) {
             this.state = new Uint32Array(16);
+            this.xstate = new Uint32Array(16);
+            this.mask = new Uint32Array(16);
             this.state.set(CONSTS);
             this.state.set(new Uint32Array(key.buffer, key.byteOffset, key.byteLength >> 2), 4);
             this.state.set(new Uint32Array(nonce.buffer, nonce.byteOffset, nonce.byteLength >> 2), 12);
-            for (let init = 0; init < 8; init++) {
+            this.state[15] = counter;
+            this.mask.set(this.state);
+            this.mask[15] = 0;
+            for (let init = 0; init < 10; init++) {
                 for (let ev = 0; ev < 4; ev++)
-                    this.QR(this.state, ev, ev + 4, ev + 8, ev + 12);
+                    this.QR(this.mask, ev, ev + 4, ev + 8, ev + 12);
                 for (let od = 0; od < 16; od += 4)
-                    this.QR(this.state, od, od + 1, od + 2, od + 3);
+                    this.QR(this.mask, od, od + 1, od + 2, od + 3);
             }
-            this.prectr = this.state[15];
-            this.state[15] ^= counter;
-            this.ctr = counter;
             this.domac = !!mac;
             this.reset();
         }
         reset() {
-            this.xstate = new Uint32Array(16);
-            this.pmac = this.domac ? new Uint32Array(CONSTS) : false;
-            this.cmac = this.domac ? new Uint32Array(CONSTS) : false;
+            this.xstate.fill(0);
+            this.pmac = this.cmac = false;
+            if (this.domac) {
+                this.pmac = new Uint32Array(4);
+                for (let i = 0; i < 16; i++)
+                    this.pmac[i & 3] ^= this.mask[i];
+                this.cmac = this.pmac.slice();
+            }
             this.data = new Uint32Array(0);
             this.pointer = 0;
             this.sigbytes = 0;
+        }
+        get counter() {
+            return this.state[15];
+        }
+        set counter(ctr) {
+            this.state[15] = ctr;
         }
         QR(state, A, B, C, D) {
             state[A] += state[B];
@@ -129,19 +142,19 @@ var Uluru;
                 return false;
             let pm = this.pmac, cm = this.cmac;
             let mac = new Uint32Array([
-                pm[0] ^ cm[0],
-                pm[1] ^ cm[1],
-                pm[2] ^ cm[2],
-                pm[3] ^ cm[3],
+                pm[0] + cm[0],
+                pm[1] + cm[1],
+                pm[2] + cm[2],
+                pm[3] + cm[3],
             ]);
-            for (let mr = 0; mr < 4; mr++) {
+            for (let mr = 0; mr < 5; mr++) {
                 this.QR(mac, 0, 1, 2, 3);
                 this.QR(mac, 3, 0, 1, 2);
                 this.QR(mac, 2, 3, 0, 1);
                 this.QR(mac, 1, 2, 3, 0);
             }
             for (let re = 0; re < 4; re++)
-                mac[re] += pm[re] + cm[re];
+                mac[re] ^= pm[re] ^ cm[re];
             return new Uint8Array(mac.buffer);
         }
         process(flush = false) {
@@ -149,7 +162,6 @@ var Uluru;
             let ptw, ctw;
             let end = Math.ceil(this.sigbytes / 4) - 1;
             let erase = 4 - this.sigbytes % 4;
-            this.state[15] = this.prectr ^ (this.ctr + (this.pointer >> 4));
             for (let b = 0; b < blocks; b++) {
                 let xs = this.xstate;
                 xs.set(this.state);
@@ -165,15 +177,15 @@ var Uluru;
                 }
                 for (let i = 0; i < 16 && this.pointer + i <= end; i++) {
                     ptw = this.data[this.pointer + i];
-                    ctw = ptw ^ (this.xstate[i] + this.state[i]);
+                    ctw = ptw ^ (this.xstate[i] + this.mask[i]);
                     if (this.pointer + i == end)
                         ctw = ctw << erase * 8 >>> erase * 8;
                     this.data[this.pointer + i] = ctw;
                     if (this.domac) {
                         this.pmac[i & 3] ^= ptw + this.xstate[i];
                         this.cmac[i & 3] ^= ctw + this.xstate[i];
-                        this.QR(this.pmac, i & 3, (i + 1) & 3, (i + 2) & 3, (i + 3) & 3);
-                        this.QR(this.cmac, i & 3, (i + 1) & 3, (i + 2) & 3, (i + 3) & 3);
+                        this.QR(this.pmac, (i + 3) & 3, i & 3, (i + 1) & 3, (i + 2) & 3);
+                        this.QR(this.cmac, (i + 3) & 3, i & 3, (i + 1) & 3, (i + 2) & 3);
                     }
                 }
                 this.pointer += 16;
@@ -189,6 +201,11 @@ var Uluru;
             this.data.set(new Uint8Array(data.buffer, data.byteOffset, data.byteLength), this.sigbytes);
             this.data = new Uint32Array(this.data.buffer);
             this.sigbytes += data.byteLength;
+        }
+        verify(mac) {
+            if (!this.domac)
+                return null;
+            return this.getmac().join(",") === new Uint8Array(mac.buffer, mac.byteOffset, mac.byteLength).join(",");
         }
         update(data) {
             this.append(data);
@@ -212,7 +229,7 @@ var Uluru;
         let salt = new Uluru.Random().fill(new Uint8Array(SALTsize));
         let key = new Uluru.Pbkdf(32, 1000).compute(new Uluru.enc.Utf8().encode(password), salt).result;
         let encryptor = new Uluru.ChaCha20(key, true, salt);
-        encryptor.update(new Uluru.enc.Utf8().encode(plaintext));
+        encryptor.update(new Uluru.enc.Utf8().encode(JSON.stringify(plaintext)));
         let encrypted = encryptor.finalize();
         return new Uluru.enc.Hex().decode(salt) +
             new Uluru.enc.Base64().decode(encrypted.data) +
@@ -220,11 +237,11 @@ var Uluru;
     }
     Uluru.encrypt = encrypt;
     function decrypt(ciphertext, password) {
-        let salt, cdata, macstr;
+        let salt, cdata, mac;
         try {
             salt = new Uluru.enc.Hex().encode(ciphertext.slice(0, SALTsize * 2));
             cdata = new Uluru.enc.Base64().encode(ciphertext.slice(SALTsize * 2, -32));
-            macstr = ciphertext.slice(-32);
+            mac = new Uluru.enc.Hex().encode(ciphertext.slice(-32));
         }
         catch (e) {
             throw "Incorrectly formated ciphertext";
@@ -233,9 +250,9 @@ var Uluru;
         let decryptor = new Uluru.ChaCha20(key, true, salt);
         decryptor.update(cdata);
         let decrypted = decryptor.finalize();
-        if (new Uluru.enc.Hex().decode(decrypted.mac) != macstr)
+        if (!decryptor.verify(mac))
             throw "Invalid authentication";
-        return new Uluru.enc.Utf8().decode(decrypted.data);
+        return JSON.parse(new Uluru.enc.Utf8().decode(decrypted.data));
     }
     Uluru.decrypt = decrypt;
     function hash(text) {
@@ -258,7 +275,9 @@ var Uluru;
         let key = Uluru.RSAKey.fromString(pubkeystr);
         let symkey = new Uluru.Random().fill(new Uint8Array(32));
         let encsymkey = new Uluru.enc.Base64().decode(key.encrypt(symkey).data);
-        let encptx = new Uluru.ChaCha20(symkey, true).update(new Uluru.enc.Utf8().encode(message)).finalize();
+        let encryptor = new Uluru.ChaCha20(symkey, true);
+        encryptor.update(new Uluru.enc.Utf8().encode(message));
+        let encptx = encryptor.finalize();
         return encsymkey + "|" + new Uluru.enc.Base64().decode(encptx.data) + new Uluru.enc.Hex().decode(encptx.mac);
     }
     Uluru.rsaEncrypt = rsaEncrypt;
@@ -275,8 +294,9 @@ var Uluru;
             throw "Incorrectly formatted RSA ciphertext";
         }
         symkey = key.decrypt(symkey).data;
-        encptx = new Uluru.ChaCha20(symkey, true).update(encptx).finalize();
-        if (encptx.mac.join(",") != mac.join(","))
+        let decryptor = new Uluru.ChaCha20(symkey, true);
+        encptx = decryptor.update(encptx).finalize();
+        if (!decryptor.verify(mac))
             throw "Invalid RSA message authentication code";
         return new Uluru.enc.Utf8().decode(encptx.data);
     }
