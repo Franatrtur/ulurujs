@@ -1,6 +1,6 @@
 namespace Uluru {
 	
-	const RHOoffets = new Uint8Array([
+	const RHOoffsets = new Uint8Array([
 		 0,  1, 62, 28, 27,
 		36, 44,  6, 55, 20,
 		 3, 10, 43, 25, 39,
@@ -44,6 +44,7 @@ namespace Uluru {
 		XYP[n] = ny*5 + (2*nx + 3*ny) % 5
 		XP1[n] = ((nx + 1) % 5) * 5 + ny
 		XP2[n] = ((nx + 2) % 5) * 5 + ny
+
 	}
 
 	/*
@@ -75,6 +76,7 @@ namespace Uluru {
 
 			this.padblock = new Uint32Array(16)
 			this.padsigbytes = 0
+
 		}
 
 		constructor(){
@@ -103,7 +105,7 @@ namespace Uluru {
 
 					state[i] ^= theta[XMM1[i]] ^ (tmp << 1 | tmp >>> 31)
 
-					off = RHOoffets[i]
+					off = RHOoffsets[i]
 					tmp = state[i]
 					temp[XYP[i]] = tmp << off | tmp >>> (32 - off)
 
@@ -115,6 +117,7 @@ namespace Uluru {
 				state[0] ^= RCs[round]
 
 			}
+
 		}
 
 		private process(flush = false){
