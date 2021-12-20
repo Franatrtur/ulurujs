@@ -162,6 +162,7 @@ var Uluru;
             let ptw, ctw;
             let end = Math.ceil(this.sigbytes / 4) - 1;
             let erase = 4 - this.sigbytes % 4;
+            let domac = !!this.domac;
             for (let b = 0; b < blocks; b++) {
                 let xs = this.xstate;
                 xs.set(this.state);
@@ -181,9 +182,9 @@ var Uluru;
                     if (this.pointer + i == end)
                         ctw = ctw << erase * 8 >>> erase * 8;
                     this.data[this.pointer + i] = ctw;
-                    if (this.domac) {
-                        this.pmac[i & 3] ^= ptw + this.xstate[i];
-                        this.cmac[i & 3] ^= ctw + this.xstate[i];
+                    if (domac) {
+                        this.pmac[i & 3] ^= ptw;
+                        this.cmac[i & 3] ^= ctw;
                         this.QR(this.pmac, (i + 3) & 3, i & 3, (i + 1) & 3, (i + 2) & 3);
                         this.QR(this.cmac, (i + 3) & 3, i & 3, (i + 1) & 3, (i + 2) & 3);
                     }
@@ -224,7 +225,7 @@ var Uluru;
 })(Uluru || (Uluru = {}));
 var Uluru;
 (function (Uluru) {
-    const SALTsize = 6;
+    const SALTsize = 8;
     function encrypt(plaintext, password) {
         let salt = new Uluru.Random().fill(new Uint8Array(SALTsize));
         let key = new Uluru.Pbkdf(32, 1000).compute(new Uluru.enc.Utf8().encode(password), salt).result;
@@ -333,7 +334,7 @@ var Uluru;
 })(Uluru || (Uluru = {}));
 var Uluru;
 (function (Uluru) {
-    const RHOoffets = new Uint8Array([
+    const RHOoffsets = new Uint8Array([
         0, 1, 62, 28, 27,
         36, 44, 6, 55, 20,
         3, 10, 43, 25, 39,
@@ -385,7 +386,7 @@ var Uluru;
                 for (let i = 0; i < 25; i++) {
                     tmp = theta[XMP1[i]];
                     state[i] ^= theta[XMM1[i]] ^ (tmp << 1 | tmp >>> 31);
-                    off = RHOoffets[i];
+                    off = RHOoffsets[i];
                     tmp = state[i];
                     temp[XYP[i]] = tmp << off | tmp >>> (32 - off);
                 }

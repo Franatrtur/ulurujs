@@ -3,7 +3,7 @@ namespace Uluru {
 	//functions for simplified user interaction
 	//using pbkdf with 1000 iterations to slow down the key generation
 
-	const SALTsize = 6
+	const SALTsize = 8
 
 	export function encrypt(plaintext: any, password: string){
 

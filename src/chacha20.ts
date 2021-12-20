@@ -16,6 +16,7 @@ namespace Uluru {
 	 * so the cipher can still be used in both ways, encrypting will produce the same mac as decrypting
 	 * this is done by computing two 4-word checksums, one for the plaintext, other one for the ciphertext
 	 * then we combine them and permute, resulting in a 128bit mac
+	 * It is important that the combination and permutation together form a compression function 256->128 bits
 	 */
 
 	export class ChaCha20 implements algorithm {
@@ -157,6 +158,7 @@ namespace Uluru {
 
 			let end = Math.ceil(this.sigbytes / 4) - 1
 			let erase = 4 - this.sigbytes % 4
+			let domac = !!this.domac
 
 			for(let b = 0; b < blocks; b++){
 
@@ -192,10 +194,10 @@ namespace Uluru {
 
 					this.data[this.pointer + i] = ctw
 
-					if(this.domac){
+					if(domac){
 
-						this.pmac[i & 3] ^= ptw + this.xstate[i] // i & 3 is the same as i % 4
-						this.cmac[i & 3] ^= ctw + this.xstate[i]
+						this.pmac[i & 3] ^= ptw // i & 3 is the same as i % 4
+						this.cmac[i & 3] ^= ctw
 
 						this.QR(this.pmac as Uint32Array, (i + 3) & 3, i & 3, (i + 1) & 3, (i + 2) & 3)
 						this.QR(this.cmac as Uint32Array, (i + 3) & 3, i & 3, (i + 1) & 3, (i + 2) & 3)
