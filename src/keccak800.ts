@@ -54,27 +54,27 @@ namespace Uluru {
 	 */
 	export class Keccak800 implements algorithm {
 
-		private state: Uint32Array
-		private temp: Uint32Array
-		private theta: Uint32Array
+		private state: Uint32Array = new Uint32Array(25)
+		private temp: Uint32Array = new Uint32Array(25)
+		private theta: Uint32Array = new Uint32Array(5)
 
 		public data: Uint32Array | Uint8Array
 		public pointer: number
 
-		private padblock: Uint32Array
+		private padblock: Uint32Array = new Uint32Array(16)
 		private padsigbytes: number
 
 		public reset(){
 
-			this.state = new Uint32Array(25)
+			this.state.fill(0)
 
-			this.temp = new Uint32Array(25)
-			this.theta = new Uint32Array(5)
+			this.temp.fill(0)
+			this.theta.fill(0)
 
 			this.data = new Uint32Array(0)
 			this.pointer = 0
 
-			this.padblock = new Uint32Array(16)
+			this.padblock.fill(0)
 			this.padsigbytes = 0
 
 		}
@@ -213,6 +213,12 @@ namespace Uluru {
 				this.keccakF(this.state)
 
 			}
+
+			this.data = new Uint32Array(0)
+			this.pointer = 0
+
+			this.padblock.fill(0)
+			this.padsigbytes = 0
 
 			return {
 

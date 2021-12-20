@@ -363,15 +363,19 @@ var Uluru;
     }
     class Keccak800 {
         constructor() {
-            this.reset();
-        }
-        reset() {
             this.state = new Uint32Array(25);
             this.temp = new Uint32Array(25);
             this.theta = new Uint32Array(5);
+            this.padblock = new Uint32Array(16);
+            this.reset();
+        }
+        reset() {
+            this.state.fill(0);
+            this.temp.fill(0);
+            this.theta.fill(0);
             this.data = new Uint32Array(0);
             this.pointer = 0;
-            this.padblock = new Uint32Array(16);
+            this.padblock.fill(0);
             this.padsigbytes = 0;
         }
         keccakF(state) {
@@ -446,6 +450,10 @@ var Uluru;
                 result.set(new Uint32Array(this.state.buffer, 0, 16), i);
                 this.keccakF(this.state);
             }
+            this.data = new Uint32Array(0);
+            this.pointer = 0;
+            this.padblock.fill(0);
+            this.padsigbytes = 0;
             return {
                 toString(encoder = new Uluru.enc.Hex) {
                     return encoder.decode(this.hash);
