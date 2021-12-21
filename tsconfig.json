@@ -14,7 +14,7 @@
 
 		"declaration": true,
 
-		"watch": true
+		"watch": false
 
 	},
 

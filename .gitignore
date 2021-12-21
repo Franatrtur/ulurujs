@@ -1,3 +1,5 @@
 build/*.build.js
 build/*.min.js
 node_modules/
+uluru.js
+uluru.min.js

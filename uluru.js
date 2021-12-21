@@ -483,10 +483,10 @@ var Uluru;
     }
     class OAEP {
         pad(data, len) {
-            let padxdata = new Uint8Array(len - HDRlen);
-            padxdata.set(data);
             if (len <= HDRlen)
                 throw "OAEP message length too small";
+            let padxdata = new Uint8Array(len - HDRlen);
+            padxdata.set(data);
             let datalen = new Uint32Array([data.byteLength]);
             let seed = new Uluru.Random().fill(new Uint8Array(SEEDlen));
             let hash = new Uluru.Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen).hash;
