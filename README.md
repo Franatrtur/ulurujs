@@ -1,8 +1,9 @@
 ﻿
 <img src="https://i.ibb.co/p1K4cDf/final.png" alt="drawing" height="80"/><br>
-Uluru crypto - a universal cryptolibrary designed with simplicity of usage in mind
+Uluru crypto - a self-containted universal cryptolibrary designed with simplicity of usage in mind.
 # Uluru in javascript
 ![GitHub](https://img.shields.io/github/license/Franatrtur/ulurujs?style=for-the-badge)  ![npm](https://img.shields.io/npm/v/uluru-crypto?label=npm%20version&style=for-the-badge) ![npm bundle size](https://img.shields.io/bundlephobia/min/uluru-crypto?style=for-the-badge)
+
 Uluru JS is written in [typescript](https://www.typescriptlang.org/), and can be used both in node and browser without any external dependencies.
 ## Quick start
 ```bash
@@ -28,6 +29,8 @@ let checksum = hash("some string to hash") //"00d5c7aff4b3f0c...
  3. [Hashing](#hashing)
  4. [Symmetric encryption](#symmetric-encryption)
  5. [Asymmetric encryption](#asymmetric-encryption)
+    - [Generating an RSA keypair](#generating-an-rsa-keypair)
+    - [RSA encryption and decryption](#rsa-encryption-and-decryption)
 ## Including Uluru in your project
 ### Node
 Installation with npm
@@ -163,6 +166,48 @@ let decrypted = decryptor.update(data).finalize().data //decrypt
 let ok = decryptor.verify(mac) //verify the integrity of the message
 ```
 ## Asymmetric encryption
-Uluru crypto implements the [RSA](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) algorithm, a safe algorithm standing strong after decades of cryptanalysis. The implementation relies on the javascript native [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) type.
+Uluru crypto implements the [RSA](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) algorithm, a safe algorithm standing strong after decades of cryptanalysis. The implementation relies on the javascript native [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) type. RSA can be used for key exchanges, digital signatures and certificates.
+Following basic classes are exposed as interface with RSA functionalities:
+```typescript
+//pseudo typescript code
+Uluru.RSAKey {
+	static fromBufferViews(
+		bufferview1: ArrayBufferView,
+		bufferview2:  ArrayBufferView
+	): RSAKey
+	static fromString(str: string): RSAKey
+	constructor(exponent: bigint | number, mod: bigint | number)
+	toString(): string
+	encrypt(data: ArrayBufferView | string): {data: Uint8Array}
+	decrypt(data: ArrayBufferView): {data: Uint8Array}
+	sign(data: ArrayBufferView | string): {data, signature: Uint8Array}
+	verify(data: ArrayBufferView | string, signature: ArrayBufferView): boolean
+}
+
+Uluru.RSAKeyPair {
+	static publicprefix, privateprefix: string[] //the string formatting
+	static fromString(str: string): RSAKeyPair
+	static generate(bitlength: number = 3072): RSAKeyPair
+	constructor(publickey: RSAKey, privatekey: RSAKey)
+	public, private: RSAKey
+	toString(): string
+}
+//Optimal assymetric encryption passing
+Uluru.OAEP {
+	constructor(){} //no arguments needed
+	pad(data: any, len?: numbe): {data: Uint8Array}
+	unpad(data: an): {data: Uint8Array}
+}
+```
+### Generating an RSA keypair
+To grenerate a pair of public and private key use the `Uluru.RSAKeyPair.generate` method. The recommended bitlength is 2048-4096, default is 3072 bits. The process of generating a keypair might take over a second depending on the size.  
+Uluru also provides a simplified function that returns the stringified keypair of a safe bitlength.
+```javascript
+//using the simplified function
+let keypairstring = Uluru.rsaGenerate()
+// using the basic class interface
+let keypair = Uluru.RSAKeyPair.generate(2560) //the bitlength can be specified
+```
+### RSA encryption and decryption
 ## Performance
 in progress

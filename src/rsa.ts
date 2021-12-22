@@ -63,7 +63,7 @@ namespace Uluru {
 	small: for(let n = 3; n < 1024; n += 2){
 
 		for(let co = 1; co < smallprimes.length; co++)
-			if(Bi(n) % smallprimes[co] === BigInt(0))
+			if(Bi(n) % smallprimes[co] === n0)
 				continue small
 
 		smallprimes.push(Bi(n))
@@ -323,7 +323,7 @@ namespace Uluru {
 
 		}
 
-		static generate(bitlength: number){
+		static generate(bitlength: number = 3072){
 
 			if(!bitlength)
 				return
@@ -343,7 +343,7 @@ namespace Uluru {
 		}
 
 		public public: RSAKey
-		private private: RSAKey
+		public private: RSAKey
 
 		constructor(publickey: RSAKey, privatekey: RSAKey){
 
@@ -363,7 +363,7 @@ namespace Uluru {
 
 
 	/**
-	 * 4096bit diffie-hellman group constant from
+	 * 4096bit diffie-hellman group constants from
 	 * @see https://www.rfc-editor.org/rfc/rfc3526
 	 */
 	const MODPgroup = buffviewToBi(new enc.Base64().encode(
@@ -374,8 +374,17 @@ namespace Uluru {
 
 	export class DiffieHellman {
 
-		E: bigint = randomBi(384) | (Bi(1) << Bi(383))
+		static generator = GENERATOR
+		static group = MODPgroup
+
+		E: bigint
 		secret: bigint
+
+		constructor(ebits = 384){
+
+			this.E = randomBi(ebits) | (Bi(1) << Bi(ebits - 1))
+			
+		}
 
 		public send(){
 
