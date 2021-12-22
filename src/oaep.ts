@@ -27,7 +27,7 @@ namespace Uluru {
 		static hashlen = HASHlen
 		static hdrlen = HDRlen
 
-		pad(data, len){
+		pad(data, len: number = 128){
 
 			if(len <= HDRlen)
 				throw "OAEP message length too small"

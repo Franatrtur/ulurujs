@@ -253,10 +253,16 @@ namespace Uluru {
 
 			this.process(true)
 
-			return {
+			let result = {
 				data: new Uint8Array(this.data.buffer, 0, this.sigbytes),
 				mac: this.getmac()
 			}
+
+			this.data = new Uint32Array(0)
+			this.pointer = 0
+			this.sigbytes = 0
+
+			return result
 
 		}
 
