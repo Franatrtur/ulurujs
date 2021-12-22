@@ -6,7 +6,7 @@ namespace Uluru {
 
 			encode: (str: string) => Uint8Array
 
-			decode: (u8array: ArrayBufferView) => string
+			decode: (bytes: ArrayBufferView) => string
 
 		}
 
