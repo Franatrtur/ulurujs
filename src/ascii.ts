@@ -4,7 +4,7 @@ namespace Uluru {
 
 		export class Ascii implements encoding {
 
-			encode(str){
+			encode(str: string){
 	
 				let u8array = new Uint8Array(str.length)
 	
@@ -15,14 +15,14 @@ namespace Uluru {
 
 			}
 	
-			decode(bytes){
+			decode(bytes: ArrayBufferView){
 
-				bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+				let bytearr = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 	
-				let str: string[] = Array(bytes.length)
+				let str: string[] = Array(bytearr.length)
 
-				for(let i = 0, l = bytes.length; i < l; i++)
-					str[i] = String.fromCharCode(bytes[i])
+				for(let i = 0, l = bytearr.length; i < l; i++)
+					str[i] = String.fromCharCode(bytearr[i])
 
 				return str.join("")
 				

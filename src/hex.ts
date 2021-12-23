@@ -16,7 +16,7 @@ namespace Uluru {
 
 		export class Hex implements encoding {
 
-			encode(str){
+			encode(str: string){
 
 				str = str.replace(/[^A-Fa-f0-9\+\/]/g, "").toLowerCase()
 
@@ -29,14 +29,14 @@ namespace Uluru {
 
 			}
 	
-			decode(bytes){
+			decode(bytes: ArrayBufferView){
 
-				bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+				let bytearr = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 
-				let str = Array(bytes.length)
+				let str = Array(bytearr.length)
 
-				for(let byte = 0; byte < bytes.length; byte++)
-					str[byte] = hexcodes[bytes[byte]]
+				for(let byte = 0; byte < bytearr.length; byte++)
+					str[byte] = hexcodes[bytearr[byte]]
 
 				return str.join("")
 

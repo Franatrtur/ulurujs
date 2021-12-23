@@ -27,13 +27,13 @@ namespace Uluru {
 		static hashlen = HASHlen
 		static hdrlen = HDRlen
 
-		pad(data, len: number = 128){
+		pad(data: ArrayBufferView, len: number = 128){
 
 			if(len <= HDRlen)
 				throw "OAEP message length too small"
 
 			let padxdata = new Uint8Array(len - HDRlen)
-			padxdata.set(data)
+			padxdata.set(new Uint8Array(data.buffer, data.byteOffset, data.byteLength))
 
 			let datalen = new Uint32Array([data.byteLength])
 			let seed = new Random().fill(new Uint8Array(SEEDlen))
@@ -55,7 +55,7 @@ namespace Uluru {
 
 		}
 
-		unpad(data){
+		unpad(data: ArrayBufferView){
 
 			let len = data.byteLength
 

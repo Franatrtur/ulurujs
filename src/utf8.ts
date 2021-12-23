@@ -4,7 +4,7 @@ namespace Uluru {
 
 		export class Utf8 implements encoding {
 
-			encode(str){
+			encode(str: string){
 
 				if(typeof TextEncoder == "function")
 					return new TextEncoder().encode(str)
@@ -51,34 +51,34 @@ namespace Uluru {
 
 			}
 	
-			decode(bytes){
+			decode(bytes: ArrayBufferView){
 
-				bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+				let bytearr = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 
 				if(typeof TextDecoder == "function")
-					return new TextDecoder().decode(bytes)
+					return new TextDecoder().decode(bytearr)
 
 				let str = []
 				let ucpoint
 
-				for(let i = 0, l = bytes.length; i < l;){
+				for(let i = 0, l = bytearr.length; i < l;){
 
 					//one UTF-8 byte (0xxxxxxx)
-					if(bytes[i] < 0x80)
-						str.push(String.fromCharCode(bytes[i++]))
+					if(bytearr[i] < 0x80)
+						str.push(String.fromCharCode(bytearr[i++]))
 						
 					//two UTF-8 bytes (110xxxxx 10xxxxxx)
-					else if(bytes[i] >= 0xc0 && bytes[i] < 0xe0)
-						str.push(String.fromCharCode(((bytes[i++] & 0x1f) << 6) | (bytes[i++] & 0x3f)))
+					else if(bytearr[i] >= 0xc0 && bytearr[i] < 0xe0)
+						str.push(String.fromCharCode(((bytearr[i++] & 0x1f) << 6) | (bytearr[i++] & 0x3f)))
 
 					//three UTF-8 bytes (1110xxxx 10xxxxxx 10xxxxxx)
-					else if(bytes[i] >= 0xe0 && bytes[i] < 0xf0)
-						str.push(String.fromCharCode(((bytes[i++] & 0x0f) << 12) | ((bytes[i++] & 0x3f) << 6) | (bytes[i++] & 0x3f)))
+					else if(bytearr[i] >= 0xe0 && bytearr[i] < 0xf0)
+						str.push(String.fromCharCode(((bytearr[i++] & 0x0f) << 12) | ((bytearr[i++] & 0x3f) << 6) | (bytearr[i++] & 0x3f)))
 
 					//four UTF-8 bytes (11110xxx 10xxxxxx 10xxxxxx 10xxxxxx)
-					else if(bytes[i] >= 0xf0 && bytes[i] < 0xf7){
+					else if(bytearr[i] >= 0xf0 && bytearr[i] < 0xf7){
 
-						ucpoint = ((bytes[i++] & 0x07) << 18) | ((bytes[i++] & 0x3f) << 12) | ((bytes[i++] & 0x3f) << 6) | (bytes[i++] & 0x3f)
+						ucpoint = ((bytearr[i++] & 0x07) << 18) | ((bytearr[i++] & 0x3f) << 12) | ((bytearr[i++] & 0x3f) << 6) | (bytearr[i++] & 0x3f)
 						
 						str.push(String.fromCodePoint(ucpoint))
 					

@@ -13,7 +13,7 @@ namespace Uluru {
 
 		export class Base64 implements encoding {
 
-			encode(str){
+			encode(str: string){
 	
 				if(typeof atob == "function")
 					return new Ascii().encode(atob(str))
@@ -49,17 +49,17 @@ namespace Uluru {
 				
 			}
 	
-			decode(bytes){
+			decode(bytes: ArrayBufferView){
 
-				bytes = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+				let bytearr = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 	
 				if(typeof btoa == "function")
-					return btoa(new Ascii().decode(bytes))
+					return btoa(new Ascii().decode(bytearr))
 
 				let str: string[] | string = []
 				let mod3 = 2, u24 = 0
 
-				for(let i = 0, l = bytes.length; i < l; i++){
+				for(let i = 0, l = bytearr.length; i < l; i++){
 
 					/* not support ancient line wrapping
 
@@ -68,9 +68,9 @@ namespace Uluru {
 					amogus*/
 
 					mod3 = i % 3
-					u24 |= bytes[i] << (16 >>> mod3 & 24)
+					u24 |= bytearr[i] << (16 >>> mod3 & 24)
 
-					if(mod3 == 2 || bytes.length - i == 1){
+					if(mod3 == 2 || bytearr.length - i == 1){
 
 						str.push(
 							b64chars.charAt(u24 >>> 18 & 0x3f) +

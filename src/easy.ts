@@ -19,7 +19,7 @@ namespace Uluru {
 
 		return  new enc.Hex().decode(salt) +
 				new enc.Base64().decode(encrypted.data) +
-				new enc.Hex().decode(encrypted.mac)
+				new enc.Hex().decode(encrypted.mac as Uint8Array)
 	}
 
 	export function decrypt(ciphertext: string, password: string): any{
@@ -98,7 +98,7 @@ namespace Uluru {
 
 		let encptx = encryptor.finalize()
 
-		return encsymkey + "|" + new enc.Base64().decode(encptx.data) + new enc.Hex().decode(encptx.mac)
+		return encsymkey + "|" + new enc.Base64().decode(encptx.data) + new enc.Hex().decode(encptx.mac as Uint8Array)
 
 	}
 
