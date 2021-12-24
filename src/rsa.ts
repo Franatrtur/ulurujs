@@ -354,7 +354,7 @@ namespace Uluru {
 
 		toString(){
 
-			return PUBLICprefix[0] + this.public.toString() + PUBLICprefix[1] + "\n" +
+			return PUBLICprefix[0] + this.public.toString() + PUBLICprefix[1] + "\n!\n" +
 				PRIVATEprefix[0] + this.private.toString() + PRIVATEprefix[1]
 
 		}

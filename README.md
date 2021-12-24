@@ -29,8 +29,12 @@ let checksum = hash("some string to hash") //"00d5c7aff4b3f0c...
  3. [Hashing](#hashing)
  4. [Symmetric encryption](#symmetric-encryption)
  5. [Asymmetric encryption](#asymmetric-encryption)
-    - [Generating an RSA keypair](#generating-an-rsa-keypair)
-    - [RSA encryption and decryption](#rsa-encryption-and-decryption)
+	 - [Generating an RSA keypair](#generating-an-rsa-keypair)
+	 - [RSA encryption and decryption](#rsa-encryption-and-decryption)
+	 - [RSA signatures](#rsa-signatures)
+ 6. [Key derivation](#key-derivation)
+ 7. [Key exchange](#key-exchange)
+ 8. [Random generation](#random-generation)
 ## Including Uluru in your project
 ### Node
 Installation with npm
@@ -67,7 +71,7 @@ $ git clone https://github.com/Franatrtur/ulurujs
 #compile the typescript code, you can modify tsconfig.json beforehand
 $ npm run build
 
-#to create minified uluru.min.js
+#to create minified uluru.min.js, !requires terser
 $ npm run compress
 #testing, for tests in browser open /test/test.html
 $ npm run test
@@ -109,8 +113,8 @@ let checksum = Uluru.hash(text) //"428b796558599e4718e91f...
 ```
 Using the basic keccak class:
 ```typescript
-//pseudo typescript code
-Uluru.Keccak800 {
+//structure (pseudocode):
+class Keccak800 {
 	constructor() //no arguments needed
 	reset(): void //reverts all update() and finalize() calls
 	update(data: string | ArrayBufferView): this //process data
@@ -139,8 +143,8 @@ try{
 ```
 Using the basic chacha class:
 ```typescript
-//pseudo typescript code
-Uluru.ChaCha20 {
+//structure (pseudocode):
+class ChaCha20 {
 	constructor(
 		key: ArrayBufferView, //typed array or a dataview of 32 bytes
 		mac?: boolean, //do we compute the mac?
@@ -169,8 +173,8 @@ let ok = decryptor.verify(mac) //verify the integrity of the message
 Uluru crypto implements the [RSA](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) algorithm, a safe algorithm standing strong after decades of cryptanalysis. The implementation relies on the javascript native [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) type. RSA can be used for key exchanges, digital signatures and certificates.
 Following basic classes are exposed as interface with RSA functionalities:
 ```typescript
-//pseudo typescript code
-Uluru.RSAKey {
+//structure (pseudocode):
+class RSAKey {
 	static fromBufferViews(
 		bufferview1: ArrayBufferView,
 		bufferview2:  ArrayBufferView
@@ -184,7 +188,7 @@ Uluru.RSAKey {
 	verify(data: ArrayBufferView | string, signature: ArrayBufferView): boolean
 }
 
-Uluru.RSAKeyPair {
+class RSAKeyPair {
 	static publicprefix, privateprefix: string[] //the string formatting
 	static fromString(str: string): RSAKeyPair
 	static generate(bitlength: number = 3072): RSAKeyPair
@@ -192,10 +196,11 @@ Uluru.RSAKeyPair {
 	public, private: RSAKey
 	toString(): string
 }
-//Optimal assymetric encryption passing
-Uluru.OAEP {
+
+//Optimal assymetric encryption padding, used by default
+class OAEP {
 	constructor(){} //no arguments needed
-	pad(data: any, len?: numbe): {data: Uint8Array}
+	pad(data: any, len?: number): {data: Uint8Array}
 	unpad(data: an): {data: Uint8Array}
 }
 ```
@@ -205,9 +210,75 @@ Uluru also provides a simplified function that returns the stringified keypair o
 ```javascript
 //using the simplified function
 let keypairstring = Uluru.rsaGenerate()
+//the stringified keys are separated by "!"
+let publickeystr, privatekeystr = keypairstring.split("!")
+
 // using the basic class interface
 let keypair = Uluru.RSAKeyPair.generate(2560) //the bitlength can be specified
 ```
 ### RSA encryption and decryption
+RSA encryption is generally slow and not suitable for encrypting large messages, Thererefore, it is usually only used for agreeing on a key for faster [symmetric encryption](#symmetric-encryption).
+Uluru also provides simplified functions for safe RSA encryption and decryption. Just pass in the plaintext/ciphertext and the string of the public/private key to encrypt/decrypt.
+```javascript
+//using the simplified functions
+let ciphertext = Uluru.rsaEncrypt("some message :)", publickeystr)
+let plaintext = Uluru.rsaDecrypt(ciphertext, privatekeystr)
+
+//using the basic interface
+/*note the public key will have to be received first*/
+let ciphertextdata = keypair.public.encrypt(some_data).data
+let plaintextdata = keypair.private.decrypt(ciphertextdata).data
+```
+### RSA signatures
+Hashes of a message created with a private key can only be decrypted using the corresponding public key. This enables not only integrity verification, but identity verification as well.  
+Uluru also provides safe functions for digital signatures if you aren't comfortable with working with raw data and binary operations.
+```javascript
+//using the simplified functions
+let messageToSign = "some message that needs authentication"
+let signaturestr = Uluru.rsaSign(messageToSign, privatekeystr)
+let ok = Uluru.rsaVerify(messageToSign, signaturestr, publickeystr)
+
+//using the basic interface
+let signature = keypair.private.sign(some_data).signature
+ok = keypair.public.verify(some_data, signature)
+```
+## Key derivation
+bruh
+## Key exchange
+Uluru crypto implements the [Diffie-Hellman key exchange](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange), a well trusted method of key exchange.
+```typescript
+//structure (pseudocode):
+class DiffieHellman {
+	constructor(ebits?: number) //ebits = exponent bitlength = 384
+	send(): Uint8Array //send public part
+	receive(data: any): void //receive other side's public part
+	finalize(length?: number): {result: Uint8Array} //derive shared secret
+}
+```
+Usage:
+```javascript
+let exchange = new Uluru.DiffieHellman()
+let send_part = exchange.send()
+exchange.receive(received_part)
+let shared_secret = exchange.finalize(32)
+```
+## Random generation
+Uluru is flexible and manages to get cryptographically secure randomness from the [node crypto](https://nodejs.org/api/crypto.html#cryptorandomfillsyncbuffer-offset-size) or the [webcrypto](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues) APIs. If no crypto object is available, `Uluru.Random.secure` will be equal to `false` and `Math.random` will be used instead (this will never happen in modern browsers and versions of node).
+```typescript
+//structure (pseudocode):
+class Random {
+	static secure: boolean
+	word(): number //get a random 32bit integer
+	fill(arr: ArrayBufferView | Array): ArrayBufferView | Array
+}
+```
+Usage:
+```javascript
+let rand = new Uluru.Random()
+let randomInt32 = rand.word()
+let randomBytes = rand.fill(new Uint8Array(69))
+//0-1 like Math.random
+let randomFraction = rand.word() / 0x100000000
+```
 ## Performance
 in progress
