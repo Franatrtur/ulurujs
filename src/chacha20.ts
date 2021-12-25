@@ -10,7 +10,7 @@ namespace Uluru {
 	 * the cipher uses the original chacha function and rounds
 	 * except that we diffuse the entropy of the key with 20 column/row rounds
 	 * to create a mask that we add to the permuted state instead of the original
-	 * nonce is a 96bit (4-word) bufferview and counter is one 32bit word (number)
+	 * nonce is a 96bit (3-word) bufferview and counter is one 32bit word (number)
 	 * 
 	 * it uses my custom MACing system that is *symmetrical*
 	 * so the cipher can still be used in both ways, encrypting will produce the same mac as decrypting

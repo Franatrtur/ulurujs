@@ -37,7 +37,7 @@ namespace Uluru {
 
 		}
 
-		public fill(arr: Uint32Array | Uint8Array | Uint16Array){
+		public fill<T = ArrayBufferView | number[]>(arr: T): T{
 
 			if(ArrayBuffer.isView(arr)){
 
@@ -53,19 +53,17 @@ namespace Uluru {
 
 				}
 
-				let bytes = new Uint8Array(arr.buffer, arr.byteLength >> 2 << 2, arr.byteLength - (arr.byteLength >> 2 << 2))
+				let roundedbytes = arr.byteLength >> 2 << 2
+
+				let bytes = new Uint8Array(arr.buffer, roundedbytes, arr.byteLength - roundedbytes)
 
 				for(let i = 0, l = bytes.length; i < l; i++)
-				//@ts-ignore
 					bytes[i] = this.word()
 
 			}
-			else{
-			//@ts-ignore
-				for(let i = 0, l = arr.length; i < l; i++)
-				//@ts-ignore
+			else
+				for(let i = 0, l = (arr as T & Array<number>).length; i < l; i++)
 					arr[i] = this.word()
-			}
 
 			return arr
 

@@ -31,6 +31,7 @@ namespace Uluru {
 			salt = new enc.Hex().encode(ciphertext.slice(0, SALTsize * 2))
 			cdata = new enc.Base64().encode(ciphertext.slice(SALTsize * 2, -32))
 			mac = new enc.Hex().encode(ciphertext.slice(-32))
+			
 		}
 		catch(e){
 			throw "Incorrectly formated ciphertext"
@@ -109,10 +110,13 @@ namespace Uluru {
 		try{
 
 			key = RSAKey.fromString(privkeystr)
+
 			splitted = message.split("|")
 			symkey = new enc.Base64().encode(splitted[0])
+
 			encptx = new enc.Base64().encode(splitted[1].slice(0, -32))
 			mac = new enc.Hex().encode(splitted[1].slice(-32))
+
 		}
 		catch(e){
 			throw "Incorrectly formatted RSA ciphertext"

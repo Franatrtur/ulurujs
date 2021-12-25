@@ -167,7 +167,7 @@ let {data, mac} = encryptor.finalize() //returns an object
 //if we init with the same parameters, the object can work as a encryptor and a decryptor
 let decryptor = new Uluru.ChaCha20(key, !!domac, nonce) //or encryptor.reset()
 let decrypted = decryptor.update(data).finalize().data //decrypt
-let ok = decryptor.verify(mac) //verify the integrity of the message
+var ok = decryptor.verify(mac) //verify the integrity of the message
 ```
 ## Asymmetric encryption
 Uluru crypto implements the [RSA](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) algorithm, a safe algorithm standing strong after decades of cryptanalysis. The implementation relies on the javascript native [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) type. RSA can be used for key exchanges, digital signatures and certificates.
@@ -236,11 +236,11 @@ Uluru also provides safe functions for digital signatures if you aren't comforta
 //using the simplified functions
 let messageToSign = "some message that needs authentication"
 let signaturestr = Uluru.rsaSign(messageToSign, privatekeystr)
-let ok = Uluru.rsaVerify(messageToSign, signaturestr, publickeystr)
+var ok = Uluru.rsaVerify(messageToSign, signaturestr, publickeystr)
 
 //using the basic interface
 let signature = keypair.private.sign(some_data).signature
-ok = keypair.public.verify(some_data, signature)
+var ok = keypair.public.verify(some_data, signature)
 ```
 ## Key derivation
 bruh
