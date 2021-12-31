@@ -260,7 +260,7 @@ Usage:
 let exchange = new Uluru.DiffieHellman()
 let send_part = exchange.send()
 exchange.receive(received_part)
-let shared_secret = exchange.finalize(32)
+let shared_secret = exchange.finalize(32).result
 ```
 ## Random generation
 Uluru is flexible and manages to get cryptographically secure randomness from the [node crypto](https://nodejs.org/api/crypto.html#cryptorandomfillsyncbuffer-offset-size) or the [webcrypto](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues) APIs. If no crypto object is available, `Uluru.Random.secure` will be equal to `false` and `Math.random` will be used instead (this will never happen in modern browsers and versions of node).
