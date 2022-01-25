@@ -23,16 +23,19 @@ namespace Uluru {
 			let block
 			let hasher = new Keccak800()
 
-			hasher.update(salt)
-			hasher.finalize(0)
-			
-			for(let i = 0; i < this.iterations; i++){
+			for(let t = 0, lent = result.length; t < lent; t += 64){
 
-				hasher.update(password)
-				block = hasher.finalize(this.outputbytes).hash
+				hasher.reset()
+				hasher.update(salt).update(new Uint32Array([t >>> 6]))
 
-				for(let b = 0; b < result.length; b++)
-					result[b] ^= block[b]
+				for(let r = 0; r < this.iterations; r++){
+
+					block = hasher.update(password).finalize(64).hash
+
+					for(let b = 0, l = result.length; (b < 64) && (t + b < l); b++)
+						result[t + b] ^= block[b]
+					
+				}
 
 			}
 

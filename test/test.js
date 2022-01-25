@@ -54,7 +54,7 @@ assert("hashing works", Uluru.hash("").startsWith("86a55d03") && Uluru.hash("A")
 
 assert("keccak squeezing", new Uluru.Keccak800().update("TOOTH").finalize(256).toString().startsWith(new Uluru.Keccak800().update("TOOTH").finalize(32).toString()))
 
-assert("old ciphertext", "ahoj" == Uluru.decrypt("48fd79b8cb1cfd8cY1lkq/UT2336236d5e2478a3287ea55cd5e2ea3c", "k"))
+assert("old ciphertext", "ahoj" == Uluru.decrypt("4a43306ea076b87dBsxtGSdO03f912fde756dd324c911256a28e866e", "k"))
 
 let testplaintext = "čeč\x11plaintext!€    有".repeat(600)
 let passwtoken = Math.random().toString()

@@ -245,7 +245,7 @@ var ok = keypair.public.verify(some_data, signature)
 ## Key derivation
 bruh
 ## Key exchange
-Uluru crypto implements the [Diffie-Hellman key exchange](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange), a well trusted method of key exchange.
+Uluru crypto implements the [Diffie-Hellman key exchange](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange), a well trusted method of key exchange. Note that this implementation has no protection for [MITM](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) attacks, but provides the basic building blocks for implementing a MITM-resistant system.
 ```typescript
 //structure (pseudocode):
 class DiffieHellman {
