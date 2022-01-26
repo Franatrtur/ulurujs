@@ -4,7 +4,7 @@ Uluru crypto - a self-containted universal cryptolibrary designed with simplicit
 # Uluru in javascript
 ![GitHub](https://img.shields.io/github/license/Franatrtur/ulurujs?style=for-the-badge)  ![npm](https://img.shields.io/npm/v/uluru-crypto?label=npm%20version&style=for-the-badge) ![npm bundle size](https://img.shields.io/bundlephobia/min/uluru-crypto?style=for-the-badge)
 
-Uluru JS is written in [typescript](https://www.typescriptlang.org/), and can be used both in node and browser without any external dependencies.
+Uluru JS is written in [typescript](https://www.typescriptlang.org/), but compiled to a single javascript file, and can be used both in node and browser without any external dependencies.
 ## Quick start
 ```bash
 $ npm install uluru-crypto
@@ -243,7 +243,7 @@ let signature = keypair.private.sign(some_data).signature
 var ok = keypair.public.verify(some_data, signature)
 ```
 ## Key derivation
-The implemented key derivation function is based on [PBKDF2](https://en.wikipedia.org/wiki/PBKDF2). It allows seeded extraction of a secret of any length and rounds to slow down the process.
+The implemented key derivation function is based on [PBKDF2](https://en.wikipedia.org/wiki/PBKDF2). It allows seeded extraction of a secret of any length in many rounds to slow down the process.
 ```typescript
 //structure (pseudocode):
 class Pbkdf {
