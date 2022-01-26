@@ -119,7 +119,7 @@ class Keccak800 {
 	reset(): void //reverts all update() and finalize() calls
 	update(data: string | ArrayBufferView): this //process data
 	//default outputbytes = 32, can be any positive integer
-	finalize(outputbytes?: number): {hash:  Uint8Array, toString?: function}
+	finalize(outputbytes?: number = 32): {hash:  Uint8Array, toString?: function}
 }
 ```
 Example usage:
@@ -149,7 +149,7 @@ class ChaCha20 {
 		key: ArrayBufferView, //typed array or a dataview of 32 bytes
 		mac?: boolean, //do we compute the mac?
 		nonce?: ArrayBufferView, //max 12 bytes, see the uluru random generation
-		counter?: number //(32bit integer), default = 0
+		counter?: number = 0 //(32bit integer)
 	)
 	reset(): void //reverts all update() and finalize() calls
 	counter: number //getter and setter for the counter
@@ -200,7 +200,7 @@ class RSAKeyPair {
 //Optimal assymetric encryption padding, used by default
 class OAEP {
 	constructor(){} //no arguments needed
-	pad(data: any, len?: number): {data: Uint8Array}
+	pad(data: any, len?: number = 128): {data: Uint8Array}
 	unpad(data: an): {data: Uint8Array}
 }
 ```
@@ -243,7 +243,19 @@ let signature = keypair.private.sign(some_data).signature
 var ok = keypair.public.verify(some_data, signature)
 ```
 ## Key derivation
-bruh
+The implemented key derivation function is based on [PBKDF2](https://en.wikipedia.org/wiki/PBKDF2). It allows seeded extraction of a secret of any length and rounds to slow down the process.
+```typescript
+//structure (pseudocode):
+class Pbkdf {
+	constructor(outputbytes?: number = 32, iterations?: number = 1000)
+	compute(password: ArrayBufferView | string, salt?: ArrayBufferView): { result: Uint8Array }
+}
+```
+Usage:
+```javascript
+let kdf = new Uluru.Pbkdf(64, 1500)
+let derived_key = kdf.compute("some password string", saltbytes).result
+```
 ## Key exchange
 Uluru crypto implements the [Diffie-Hellman key exchange](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange), a well trusted method of key exchange. Note that this implementation has no protection for [MITM](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) attacks, but provides the basic building blocks for implementing a MITM-resistant system.
 ```typescript
