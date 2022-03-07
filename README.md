@@ -35,6 +35,7 @@ let checksum = hash("some string to hash") //"00d5c7aff4b3f0c...
  6. [Key derivation](#key-derivation)
  7. [Key exchange](#key-exchange)
  8. [Random generation](#random-generation)
+ 9. [Keyed-hash authentication (HMAC)](#keyed-hash-authentication-hmac)
 ## Including Uluru in your project
 ### Node
 Installation with npm
@@ -119,14 +120,14 @@ class Keccak800 {
 	reset(): void //reverts all update() and finalize() calls
 	update(data: string | ArrayBufferView): this //process data
 	//default outputbytes = 32, can be any positive integer
-	finalize(outputbytes?: number = 32): {hash:  Uint8Array, toString?: function}
+	finalize(outputbytes?: number = 32): Uint8Array
 }
 ```
 Example usage:
 ```javascript
 let hasher = new Uluru.Keccak800() //init the hash process
 hasher.update(some_data).update(more_data) //process data
-let checksum = hasher.finalize(64).hash //get 64 bytes of the hash
+let checksum = hasher.finalize(64) //get 64 bytes of the hash
 ```
 ## Symmetric encryption
 Uluru crypto implements the [Chacha cipher](https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant), which is a very secure symmetric stream cipher. In addition, during the encryption and decryption process, a 128bit [MAC](https://en.wikipedia.org/wiki/Message_authentication_code) is computed to verify the integrity of the message. This ensures the encrypted data was not mangled with in any way.  The whole process is symmetric so encryption and decryption are performed in the same way.  
@@ -182,9 +183,9 @@ class RSAKey {
 	static fromString(str: string): RSAKey
 	constructor(exponent: bigint | number, mod: bigint | number)
 	toString(): string
-	encrypt(data: ArrayBufferView | string): {data: Uint8Array}
-	decrypt(data: ArrayBufferView): {data: Uint8Array}
-	sign(data: ArrayBufferView | string): {data, signature: Uint8Array}
+	encrypt(data: ArrayBufferView | string): Uint8Array
+	decrypt(data: ArrayBufferView): Uint8Array
+	sign(data: ArrayBufferView | string): Uint8Array //signature
 	verify(data: ArrayBufferView | string, signature: ArrayBufferView): boolean
 }
 
@@ -200,8 +201,8 @@ class RSAKeyPair {
 //Optimal assymetric encryption padding, used by default
 class OAEP {
 	constructor(){} //no arguments needed
-	pad(data: any, len?: number = 128): {data: Uint8Array}
-	unpad(data: an): {data: Uint8Array}
+	pad(data: any, len?: number = 128): Uint8Array
+	unpad(data: an): Uint8Array
 }
 ```
 ### Generating an RSA keypair
@@ -226,8 +227,8 @@ let plaintext = Uluru.rsaDecrypt(ciphertext, privatekeystr)
 
 //using the basic interface
 /*note the public key will have to be received first*/
-let ciphertextdata = keypair.public.encrypt(some_data).data
-let plaintextdata = keypair.private.decrypt(ciphertextdata).data
+let ciphertextdata = keypair.public.encrypt(some_data)
+let plaintextdata = keypair.private.decrypt(ciphertextdata)
 ```
 ### RSA signatures
 Hashes of a message created with a private key can only be decrypted using the corresponding public key. This enables not only integrity verification, but identity verification as well.  
@@ -239,22 +240,22 @@ let signaturestr = Uluru.rsaSign(messageToSign, privatekeystr)
 var ok = Uluru.rsaVerify(messageToSign, signaturestr, publickeystr)
 
 //using the basic interface
-let signature = keypair.private.sign(some_data).signature
+let signature = keypair.private.sign(some_data)
 var ok = keypair.public.verify(some_data, signature)
 ```
 ## Key derivation
 The implemented key derivation function is based on [PBKDF2](https://en.wikipedia.org/wiki/PBKDF2). It allows seeded extraction of a secret of any length in many rounds to slow down the process.
 ```typescript
 //structure (pseudocode):
-class Pbkdf {
+class PBKDF {
 	constructor(outputbytes?: number = 32, iterations?: number = 1000)
-	compute(password: ArrayBufferView | string, salt?: ArrayBufferView): { result: Uint8Array }
+	compute(password: ArrayBufferView | string, salt?: ArrayBufferView): Uint8Array
 }
 ```
 Usage:
 ```javascript
-let kdf = new Uluru.Pbkdf(64, 1500)
-let derived_key = kdf.compute("some password string", saltbytes).result
+let kdf = new Uluru.PBKDF(64, 1500)
+let derived_key = kdf.compute("some password", saltbytes)
 ```
 ## Key exchange
 Uluru crypto implements the [Diffie-Hellman key exchange](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange), a well trusted method of key exchange. Note that this implementation has no protection for [MITM](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) attacks, but provides the basic building blocks for implementing a MITM-resistant system.
@@ -264,7 +265,7 @@ class DiffieHellman {
 	constructor(ebits?: number) //ebits = exponent bitlength = 384
 	send(): Uint8Array //send public part
 	receive(data: any): void //receive other side's public part
-	finalize(length?: number): {result: Uint8Array} //derive shared secret
+	finalize(length?: number): Uint8Array //derive shared secret
 }
 ```
 Usage:
@@ -272,7 +273,7 @@ Usage:
 let exchange = new Uluru.DiffieHellman()
 let send_part = exchange.send()
 exchange.receive(received_part)
-let shared_secret = exchange.finalize(32).result
+let shared_secret = exchange.finalize(32)
 ```
 ## Random generation
 Uluru is flexible and manages to get cryptographically secure randomness from the [node crypto](https://nodejs.org/api/crypto.html#cryptorandomfillsyncbuffer-offset-size) or the [webcrypto](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues) APIs. If no crypto object is available, `Uluru.Random.secure` will be equal to `false` and `Math.random` will be used instead (this will never happen in modern browsers and versions of node).
@@ -291,6 +292,30 @@ let randomInt32 = rand.word()
 let randomBytes = rand.fill(new Uint8Array(69))
 //0-1 like Math.random
 let randomFraction = rand.word() / 0x100000000
+```
+## Keyed-hash authentication (HMAC)
+[HMAC](https://en.wikipedia.org/wiki/HMAC) (keyed-hash message authentication code) provides a secure way to authenticate a message, using a shared key (and potentially a salt). The key is combined with the message in such a way that the resulting checksum verifies that the message has not been changed/malformed. While the key remains secret, the checksum is sent along with the message. Uluru also provides a safe function for hmac-ing if you aren't comfortable with working with raw data and binary operations.
+> Note: uluru encryption already has a secure MACing system built into it!
+> But using this HMAC is still useful when authenticating unencrypted data
+```typescript
+//structure (pseudocode):
+class HMAC {
+	constructor(key: ArrayBufferView, salt?: ArrayBufferView)
+	update(data: string | ArrayBufferView): this
+	finalize(outputbytes?: number): Uint8Array
+}
+```
+Usage:
+```javascript
+//using the simplified function
+let checksum = Uluru.hmac(send_message, "shared-secret-key") //sender
+let verify_checksum = Uluru.hmac(received_message, "shared-secret-key") //receiver
+
+//using the basic interface
+let myHmac = new Uluru.HMAC(shared_secret_key, optional_salt)
+myHmac.update(message_part1).update(message_part2) //...etc (chainable)
+let hmac_checksum = myHmac.finalize(64)
+//the optional salt can be for example a timestamp, to prevent replay attacks
 ```
 ## Performance
 in progress

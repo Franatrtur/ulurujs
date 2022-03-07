@@ -134,4 +134,14 @@ namespace Uluru {
 
 	}
 
+	export function hmac(message, password){
+
+		return new Uluru.enc.Hex().decode(
+			new Uluru.HMAC(
+				new PBKDF().compute(password)
+			).update(message).finalize(32)
+		)
+
+	}
+
 }

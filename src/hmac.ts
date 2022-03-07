@@ -9,7 +9,7 @@ namespace Uluru {
 	 * Optionally, salt can added to the key
 	 * Hashing function used is keccak800
 	 */
-	export class HMAC {
+	export class HMAC implements algorithm {
 
 		private hasher: Keccak800
 		private outerkey: ArrayBufferView
