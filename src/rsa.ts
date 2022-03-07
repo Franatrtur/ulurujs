@@ -154,7 +154,7 @@ namespace Uluru {
 
 		}
 
-		throw "Cannot find a prime"
+		throw `Couldn't find a prime in ${attempts} attempts`
 
 	}
 
@@ -255,17 +255,13 @@ namespace Uluru {
 			if(data.byteLength > msglen)
 				throw "Message too long"
 
-			return {
-				data: this.process(new OAEP().pad(data, msglen).data)
-			}
+			return this.process(new OAEP().pad(data, msglen))
 
 		}
 
 		public decrypt(data: ArrayBufferView){
 
-			return {
-				data: new OAEP().unpad(this.process(data)).data
-			}
+			return new OAEP().unpad(this.process(data))
 
 		}
 
@@ -273,12 +269,9 @@ namespace Uluru {
 
 			data = typeof data == "string" ? new enc.Utf8().encode(data as string) : data
 
-			let hash = new Keccak800().update(data).finalize(64).hash
+			let hash = new Keccak800().update(data).finalize(64)
 
-			return {
-				data,
-				signature: this.encrypt(hash).data
-			}
+			return this.encrypt(hash)
 
 		}
 
@@ -288,8 +281,8 @@ namespace Uluru {
 
 				data = typeof data == "string" ? new enc.Utf8().encode(data as string) : data
 
-				let hash = new Keccak800().update(data).finalize(64).hash
-				let authcode = this.decrypt(signature).data
+				let hash = new Keccak800().update(data).finalize(64)
+				let authcode = this.decrypt(signature)
 
 				return hash.join(",") == authcode.join(",")
 
@@ -302,7 +295,7 @@ namespace Uluru {
 
 	}
 
-	//public exponent - fermat prime 2**8+1 = 257
+	//public exponent - fermat prime 257 (=2**8+1)
 	const PUBEXP = Bi(0x101)
 
 	const PUBLICprefix = ["\n==BEGIN ULURU PUBLIC KEY==\n", "\n==END ULURU PUBLIC KEY==\n"]
@@ -403,7 +396,7 @@ namespace Uluru {
 			if(typeof this.secret != "bigint")
 				throw "Key exchange cannot finalize without receiving"
 
-			return new Pbkdf(length, 2).compute(biToBuffview(this.secret))
+			return new PBKDF(length, 1).compute(biToBuffview(this.secret))
 
 		}
 

@@ -2,10 +2,10 @@ namespace Uluru {
 
 	const CAPACITY = 16300 //max is 65536 bytes -> 16thousand 32bit words
 
-	let Pool = new Uint32Array(CAPACITY)
+	const Pool = new Uint32Array(CAPACITY)
 	let Pointer = 0
 
-	function reset(){
+	function RESET(){
 
 		Pointer = 0
 
@@ -31,7 +31,7 @@ namespace Uluru {
 		public word(){
 
 			if(Pointer >= CAPACITY)
-				reset()
+				RESET()
 
 			return Pool[Pointer++]
 
@@ -41,7 +41,7 @@ namespace Uluru {
 
 			if(ArrayBuffer.isView(arr)){
 
-				reset()
+				RESET()
 
 				let wrds = new Uint32Array(arr.buffer, arr.byteOffset, arr.byteLength >> 2)
 
@@ -49,7 +49,7 @@ namespace Uluru {
 
 					wrds.set(new Uint32Array(Pool.buffer, 0, Math.min((l - i), CAPACITY)), i)
 
-					reset()
+					RESET()
 
 				}
 
@@ -71,6 +71,6 @@ namespace Uluru {
 
 	}
 
-	reset()
+	RESET()
 
 }

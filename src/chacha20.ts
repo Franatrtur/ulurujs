@@ -1,6 +1,6 @@
 namespace Uluru {
 	
-	//nothing-up-my-sleeve constants "expand 32-byte k"
+	/**nothing-up-my-sleeve constants "expand 32-byte k"*/
 	const CONSTS = new Uint32Array(
 		[0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]
 	)
@@ -18,7 +18,6 @@ namespace Uluru {
 	 * then we combine them and permute, resulting in a 128bit mac
 	 * It is important that the combination and permutation together form a compression function 256->128 bits
 	 */
-
 	export class ChaCha20 implements algorithm {
 		
 		private state: Uint32Array = new Uint32Array(16)
@@ -160,9 +159,9 @@ namespace Uluru {
 			let erase = 4 - this.sigbytes % 4
 			let domac = !!this.domac
 
-			for(let b = 0; b < blocks; b++){
+			let xs = this.xstate
 
-				let xs = this.xstate
+			for(let b = 0; b < blocks; b++){
 
 				xs.set(this.state)
 
@@ -187,7 +186,7 @@ namespace Uluru {
 				for(let i = 0; i < 16 && this.pointer + i <= end; i++){
 
 					ptw = this.data[this.pointer + i]
-					ctw = ptw ^ (this.xstate[i] + this.mask[i])
+					ctw = ptw ^ (xs[i] + this.mask[i])
 
 					if(this.pointer + i == end)
 						ctw = ctw << erase * 8 >>> erase * 8 //erase the needless bytes, keeping in mind that uint32array is little-endian!

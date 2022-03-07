@@ -37,21 +37,19 @@ namespace Uluru {
 
 			let datalen = new Uint32Array([data.byteLength])
 			let seed = new Random().fill(new Uint8Array(SEEDlen))
-			let hash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen).hash
+			let hash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen)
 
 			let header = merge(datalen, seed, hash)
 
-			let mask = new Keccak800().update(header).finalize(len - HDRlen).hash
+			let mask = new Keccak800().update(header).finalize(len - HDRlen)
 			for(let m0 = 0; m0 < len - HDRlen; m0++)
 				padxdata[m0] ^= mask[m0]
 
-			mask = new Keccak800().update(padxdata).finalize(HDRlen).hash
+			mask = new Keccak800().update(padxdata).finalize(HDRlen)
 			for(let m1 = 0; m1 < HDRlen; m1++)
 				header[m1] ^= mask[m1]
 
-			return {
-				data: merge(header, padxdata)
-			}
+			return merge(header, padxdata)
 
 		}
 
@@ -62,11 +60,11 @@ namespace Uluru {
 			let header = new Uint8Array(data.buffer, 0, HDRlen).slice()
 			let padxdata = new Uint8Array(data.buffer, HDRlen).slice()
 
-			let mask = new Keccak800().update(padxdata).finalize(HDRlen).hash
+			let mask = new Keccak800().update(padxdata).finalize(HDRlen)
 			for(let m1 = 0; m1 < HDRlen; m1++)
 				header[m1] ^= mask[m1]
 
-			mask = new Keccak800().update(header).finalize(len - HDRlen).hash
+			mask = new Keccak800().update(header).finalize(len - HDRlen)
 			for(let m0 = 0; m0 < len - HDRlen; m0++)
 				padxdata[m0] ^= mask[m0]
 
@@ -74,13 +72,11 @@ namespace Uluru {
 			let seed = new Uint8Array(header.buffer, 4, SEEDlen)
 			let hash = new Uint8Array(header.buffer, 4 + SEEDlen, HASHlen)
 
-			let rehash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen).hash
+			let rehash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen)
 			if(rehash.join(",") != hash.join(","))
 				throw "OAEP invalid padding hash"
 
-			return {
-				data: new Uint8Array(padxdata.buffer, 0, datalen[0])
-			}
+			return new Uint8Array(padxdata.buffer, 0, datalen[0])
 			
 		}
 

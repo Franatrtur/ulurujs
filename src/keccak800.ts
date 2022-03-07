@@ -22,7 +22,7 @@ namespace Uluru {
 	//x mod minus 1
 	const XMM1 = new Uint8Array(25)
 
-	//x y permutation
+	//x y permutation - shuffling
 	const XYP = new Uint8Array(25)
 
 	//x plus 1 - next lane
@@ -41,18 +41,20 @@ namespace Uluru {
 
 		XMP1[n] = (nx + 1) % 5
 		XMM1[n] = (nx + 4) % 5
-		XYP[n] = ny*5 + (2*nx + 3*ny) % 5
+		XYP[n] = ny * 5 + (2 * nx + 3 * ny) % 5
 		XP1[n] = ((nx + 1) % 5) * 5 + ny
 		XP2[n] = ((nx + 2) % 5) * 5 + ny
 
 	}
 
 	/*
-	 * An implementation of the keccak800 algorithm as accurately as i could (idk about the uint32array endianness, padding etc)
+	 * An implementation of the eccak800 algorithm as accurately as i could (idk about the uint32array endianness, padding etc)
 	 * smaller sibling to the keccak1600 used as sha3 (but that requires 64bit words)
 	 * built with capacity 64 bytes and 36 private state bytes
 	 */
 	export class Keccak800 implements algorithm {
+
+		public static blockbytes = 64
 
 		private state: Uint32Array = new Uint32Array(25)
 		private temp: Uint32Array = new Uint32Array(25)
@@ -205,11 +207,11 @@ namespace Uluru {
 			this.process(true)
 
 			let len = Math.ceil(outputbytes / 64) * 16
-			let result = new Uint32Array(len)
+			let words = new Uint32Array(len)
 
 			for(let i = 0; i < len; i += 16){
 
-				result.set(new Uint32Array(this.state.buffer, 0, 16), i)
+				words.set(new Uint32Array(this.state.buffer, 0, 16), i)
 				this.keccakF(this.state)
 
 			}
@@ -220,17 +222,15 @@ namespace Uluru {
 			this.padblock.fill(0)
 			this.padsigbytes = 0
 
-			return {
+			let result = new Uint8Array(words.buffer, 0, outputbytes)
 
-				toString(encoder: enc.encoding = new enc.Hex){
+			result.toString = function(encoder: enc.encoding = new enc.Hex){
 
-					return encoder.decode(this.hash)
-
-				},
-
-				hash: new Uint8Array(result.buffer, 0, outputbytes)
+				return encoder.decode(this)
 
 			}
+
+			return result
 			
 		}
 

@@ -9,11 +9,11 @@ namespace Uluru {
 
 		let salt = new Random().fill(new Uint8Array(SALTsize))
 
-		let key = new Pbkdf(32, 1000).compute(new enc.Utf8().encode(password), salt).result
+		let key = new PBKDF(32, 1000).compute(new enc.Utf8().encode(password), salt)
 
 		let encryptor = new ChaCha20(key, true, salt)
 
-		encryptor.update(new enc.Utf8().encode(JSON.stringify(plaintext)))
+		encryptor.update(new enc.Utf8().encode(plaintext))
 
 		let encrypted = encryptor.finalize()
 
@@ -37,7 +37,7 @@ namespace Uluru {
 			throw "Incorrectly formated ciphertext"
 		}
 
-		let key = new Pbkdf(32, 1000).compute(new enc.Utf8().encode(password), salt).result
+		let key = new PBKDF(32, 1000).compute(new enc.Utf8().encode(password), salt)
 
 		let decryptor = new ChaCha20(key, true, salt)
 
@@ -48,13 +48,13 @@ namespace Uluru {
 		if(!decryptor.verify(mac))
 			throw "Invalid authentication"
 
-		return JSON.parse(new enc.Utf8().decode(decrypted.data))
+		return new enc.Utf8().decode(decrypted.data)
 
 	}
 
 	export function hash(text){
 
-		return new Keccak800().update(new enc.Utf8().encode(text)).finalize().toString(new enc.Hex)
+		return new enc.Hex().decode(new Keccak800().update(new enc.Utf8().encode(text)).finalize())
 
 	}
 
@@ -69,7 +69,7 @@ namespace Uluru {
 		return new enc.Base64().decode(
 			RSAKey.fromString(privkeystr).sign(
 				new enc.Utf8().encode(message)
-			).signature
+			)
 		)
 
 	}
@@ -90,7 +90,7 @@ namespace Uluru {
 		let symkey = new Random().fill(new Uint8Array(32))
 
 		let encsymkey = new enc.Base64().decode(
-			key.encrypt(symkey).data
+			key.encrypt(symkey)
 		)
 
 		let encryptor = new ChaCha20(symkey, true)
@@ -105,7 +105,7 @@ namespace Uluru {
 
 	export function rsaDecrypt(message, privkeystr){
 
-		let key, symkey, encptx, mac, splitted
+		let key: RSAKey, symkey, encptx, mac, splitted
 
 		try{
 
@@ -122,7 +122,7 @@ namespace Uluru {
 			throw "Incorrectly formatted RSA ciphertext"
 		}
 
-		symkey = key.decrypt(symkey).data
+		symkey = key.decrypt(symkey)
 		let decryptor = new ChaCha20(symkey, true)
 		
 		encptx = decryptor.update(encptx).finalize()

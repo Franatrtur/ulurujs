@@ -1,72 +1,151 @@
+
 var Uluru = Uluru || require("../uluru")
+var {performance} = typeof performance == "object" ? {performance} : require('perf_hooks')
 
-var allpassed = true
 
-function assert(label, condition){
+let ERRORS = []
 
-	if(!!condition)
-		console.log("\x1b[32m%s\x1b[0m✔️", label,)
+;(function(){
 
-	else{
-		console.log("\x1b[31m%s\x1b[0m❌", label)
-		allpassed = false
-	}
+let nrun = 0
+
+const Colors = {
+	red: "\x1b[31m",
+	green: "\x1b[32m",
+	end: "\x1b[0m"
 }
 
-assert("uluru is loaded", typeof Uluru == "object")
+function Run(name, trial, ...args){
 
-try{
-	assert("ascii encode works", new Uluru.enc.Ascii().encode("\x10ABabč ?😍").join(",") == "16,65,66,97,98,13,32,63,61,13")
-	assert("ascii decode works",
-		new Uluru.enc.Ascii().decode(new Uint8Array([
-			0,1,11,12,13,14,32,33,34,49,198,230,250,100,196,141,240,159,152,141
-		])) == '\x00\x01\v\f\r\x0E !"1ÆæúdÄ\x8Dð\x9F\x98\x8D'
+	nrun++
+
+	let t0 = performance.now()
+	let success = true
+	let err
+
+	try{
+
+		if(!trial(...args))
+			throw "Test failed with a falsy return value"
+
+	}
+	catch(e){
+
+		success = false
+		err = e
+
+		ERRORS[nrun] = err
+
+	}
+
+	let t1 = performance.now()
+
+	console.log(
+		`${nrun}) ${success ? Colors.green : Colors.red}${name}${Colors.end} ${success ? "✔️" : "❌"} (${(t1 - t0).toFixed(2)}ms)`
+		+ (success ? "" : `\n${err.toString()}`)
 	)
 
-assert("base64 encode works", new Uluru.enc.Base64().encode("9dr2AnGW6y3aghaC").join(",") == "245,218,246,2,113,150,235,45,218,130,22,130")
-assert("base64 decode works",
-new Uluru.enc.Base64().decode(new Uint8Array([245,218,246,2,113,150,235,45,218,130,22,130])) == '9dr2AnGW6y3aghaC'
-)
-
-assert("hex encode works", new Uluru.enc.Hex().encode("1019deadbeefe").join(",") == "16,25,222,173,190,239")
-assert("hex decode works",
-	new Uluru.enc.Hex().decode(new Uint8Array([
-		16,25,222,173,190,239
-	])) == '1019deadbeef'
-)
-
-assert("utf8 encode works", new Uluru.enc.Utf8().encode(
-`\x10Aa ?“
-”„†•…‰™œŠŸž€ ΑΒΓΔΩαβγδω АБВГДабвгдማይሰᚳᚹ‾⍎'´\`
-  ∀∂∈ℝ∧∪≡∞ ↑↗↨↻⇣ ┐┼╔╘░►☺♀ ﬁ�⑀₂ἠḂӥẄɐː⍎אԱა⠜⠇⠑コンニ有有 個	个🧨🤐
-`
-).join(",") == "16,65,97,32,63,226,128,156,10,226,128,157,226,128,158,226,128,160,226,128,162,226,128,166,226,128,176,226,132,162,197,147,197,160,197,184,197,190,226,130,172,32,206,145,206,146,206,147,206,148,206,169,206,177,206,178,206,179,206,180,207,137,32,208,144,208,145,208,146,208,147,208,148,208,176,208,177,208,178,208,179,208,180,225,136,155,225,139,173,225,136,176,225,154,179,225,154,185,226,128,190,226,141,142,39,194,180,96,10,32,32,226,136,128,226,136,130,226,136,136,226,132,157,226,136,167,226,136,170,226,137,161,226,136,158,32,226,134,145,226,134,151,226,134,168,226,134,187,226,135,163,32,226,148,144,226,148,188,226,149,148,226,149,152,226,150,145,226,150,186,226,152,186,226,153,128,32,239,172,129,239,191,189,226,145,128,226,130,130,225,188,160,225,184,130,211,165,225,186,132,201,144,203,144,226,141,142,215,144,212,177,225,131,144,226,160,156,226,160,135,226,160,145,227,130,179,227,131,179,227,131,139,230,156,137,230,156,137,32,229,128,139,9,228,184,170,240,159,167,168,240,159,164,144,10")
-assert("utf8 decode works",
-	new Uluru.enc.Utf8().decode(new Uint8Array([
-		16,65,97,32,63,226,128,156,10,226,128,157,226,128,158,226,128,160,226,128,162,226,128,166,226,128,176,226,132,162,197,147,197,160,197,184,197,190,226,130,172,32,206,145,206,146,206,147,206,148,206,169,206,177,206,178,206,179,206,180,207,137,32,208,144,208,145,208,146,208,147,208,148,208,176,208,177,208,178,208,179,208,180,225,136,155,225,139,173,225,136,176,225,154,179,225,154,185,226,128,190,226,141,142,39,194,180,96,10,32,32,226,136,128,226,136,130,226,136,136,226,132,157,226,136,167,226,136,170,226,137,161,226,136,158,32,226,134,145,226,134,151,226,134,168,226,134,187,226,135,163,32,226,148,144,226,148,188,226,149,148,226,149,152,226,150,145,226,150,186,226,152,186,226,153,128,32,239,172,129,239,191,189,226,145,128,226,130,130,225,188,160,225,184,130,211,165,225,186,132,201,144,203,144,226,141,142,215,144,212,177,225,131,144,226,160,156,226,160,135,226,160,145,227,130,179,227,131,179,227,131,139,230,156,137,230,156,137,32,229,128,139,9,228,184,170,240,159,167,168,240,159,164,144,10
-	])) == `\x10Aa ?“
-”„†•…‰™œŠŸž€ ΑΒΓΔΩαβγδω АБВГДабвгдማይሰᚳᚹ‾⍎'´\`
-  ∀∂∈ℝ∧∪≡∞ ↑↗↨↻⇣ ┐┼╔╘░►☺♀ ﬁ�⑀₂ἠḂӥẄɐː⍎אԱა⠜⠇⠑コンニ有有 個	个🧨🤐
-`
-)
-
-assert("hashing works", Uluru.hash("").startsWith("86a55d03") && Uluru.hash("A").startsWith("ad54ca3f") && Uluru.hash("_fillč".repeat(690)).startsWith("ad282344"))
-
-assert("keccak squeezing", new Uluru.Keccak800().update("TOOTH").finalize(256).toString().startsWith(new Uluru.Keccak800().update("TOOTH").finalize(32).toString()))
-
-assert("old ciphertext", "ahoj" == Uluru.decrypt("4a43306ea076b87dBsxtGSdO03f912fde756dd324c911256a28e866e", "k"))
-
-let testplaintext = "čeč\x11plaintext!€    有".repeat(600)
-let passwtoken = Math.random().toString()
-assert("symmetric encryption", testplaintext == Uluru.decrypt(Uluru.encrypt(testplaintext, passwtoken), passwtoken))
-
-
-}
-catch(e){
-	assert("Exception was thrown", false)
-	Uluru.ERROR = e
 }
 
 
-if(!allpassed)
-	console.log("\x1b[31mTEST FAILED\x1b[0m")
+function encodingTester(encoder, streams){
+
+	for(let i in streams){
+
+		if(encoder.encode(streams[i].string).join(",") != streams[i].bytes.join(","))
+			throw `Cannot encode stream #${i}`
+
+		if(encoder.decode(new Uint8Array(streams[i].bytes)) != streams[i].string)
+			throw `Cannot decode stream #${i}`
+
+	}
+
+	return true
+
+}
+
+
+Run("Ascii encoding", () => {
+
+	let streams = [
+		{
+			string: "Aa Zz",
+			bytes: [65,97,32,90,122]
+		},
+		{
+			string: '\x00\x01\v\f\r\x0E !"1ÆæúdÄ\x8Dð\x9F\x98\x8D',
+			bytes: [0,1,11,12,13,14,32,33,34,49,198,230,250,100,196,141,240,159,152,141]
+		}
+	]
+
+	return encodingTester(new Uluru.enc.Ascii(), streams)
+
+})
+
+Run("Base64 encoding", () => {
+
+	let streams = [
+		{
+			string: "9dr2AnGW6y3aghaC",
+			bytes: [245,218,246,2,113,150,235,45,218,130,22,130]
+		}
+	]
+
+	return encodingTester(new Uluru.enc.Base64(), streams)
+
+})
+
+Run("Hex encoding", () => {
+
+	let streams = [
+		{
+			string: "1019deadbeef",
+			bytes: [16,25,222,173,190,239]
+		}
+	]
+
+	return encodingTester(new Uluru.enc.Hex(), streams)
+
+})
+
+Run("Utf8 encoding", () => {
+
+	let streams = [
+		{
+			string: "Aa Zz",
+			bytes: [65,97,32,90,122]
+		},
+		{
+			string: `\x10Aa ?“
+”„†•…‰™œŠŸž€ ΑΒΓΔΩαβγδω АБВГДабвгдማይሰᚳᚹ‾⍎'´\`
+  ∀∂∈ℝ∧∪≡∞ ↑↗↨↻⇣ ┐┼╔╘░►☺♀ ﬁ�⑀₂ἠḂӥẄɐː⍎אԱა⠜⠇⠑コンニ有有 個	个🧨🤐
+`,
+			bytes: [16,65,97,32,63,226,128,156,10,226,128,157,226,128,158,226,128,160,226,128,162,226,128,166,226,128,176,226,132,162,197,147,197,160,197,184,197,190,226,130,172,32,206,145,206,146,206,147,206,148,206,169,206,177,206,178,206,179,206,180,207,137,32,208,144,208,145,208,146,208,147,208,148,208,176,208,177,208,178,208,179,208,180,225,136,155,225,139,173,225,136,176,225,154,179,225,154,185,226,128,190,226,141,142,39,194,180,96,10,32,32,226,136,128,226,136,130,226,136,136,226,132,157,226,136,167,226,136,170,226,137,161,226,136,158,32,226,134,145,226,134,151,226,134,168,226,134,187,226,135,163,32,226,148,144,226,148,188,226,149,148,226,149,152,226,150,145,226,150,186,226,152,186,226,153,128,32,239,172,129,239,191,189,226,145,128,226,130,130,225,188,160,225,184,130,211,165,225,186,132,201,144,203,144,226,141,142,215,144,212,177,225,131,144,226,160,156,226,160,135,226,160,145,227,130,179,227,131,179,227,131,139,230,156,137,230,156,137,32,229,128,139,9,228,184,170,240,159,167,168,240,159,164,144,10]
+		}
+	]
+
+	return encodingTester(new Uluru.enc.Utf8(), streams)
+
+})
+
+
+Run("Ez Hash checksums (old)", () => {
+
+	return Uluru.hash("").startsWith("86a55d03") && Uluru.hash("A").startsWith("ad54ca3f") && Uluru.hash("_fillč".repeat(690)).startsWith("ad282344")
+
+})
+Run("Keccak squeezing (old)", () => {
+
+	return new Uluru.Keccak800().update("TOOTH").finalize(256).toString().startsWith(new Uluru.Keccak800().update("TOOTH").finalize(32).toString())
+
+})
+Run("Backwards compatible decryption (old)", () => {
+
+	return "ahoj" == Uluru.decrypt("12381b81274b8c9dMZIzcQ==27637d76eedac4201a37571c917273f8", "k")
+
+})
+
+
+console.log("\n===" + (ERRORS.length ? `${Colors.red}TEST DIDN'T PASS` : `${Colors.green}TEST PASSED`) + Colors.end + "===")
+
+})();
