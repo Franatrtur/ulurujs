@@ -295,7 +295,7 @@ let randomFraction = rand.word() / 0x100000000
 ```
 ## Keyed-hash authentication (HMAC)
 [HMAC](https://en.wikipedia.org/wiki/HMAC) (keyed-hash message authentication code) provides a secure way to authenticate a message, using a shared key (and potentially a salt). The key is combined with the message in such a way that the resulting checksum verifies that the message has not been changed/malformed. While the key remains secret, the checksum is sent along with the message. Uluru also provides a safe function for hmac-ing if you aren't comfortable with working with raw data and binary operations.
-> Note: uluru encryption already has a secure MACing system built into it!
+> Note: uluru encryption already has a secure MACing system built into it!  
 > But using this HMAC is still useful when authenticating unencrypted data
 ```typescript
 //structure (pseudocode):
