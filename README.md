@@ -46,9 +46,14 @@ Usage in node
 ```javascript
 //require the exported object
 const Uluru = require("uluru-crypto")
+//using ESM import
+import Uluru from "uluru-crypto"
 
 //or require specific functionalities that are needed
 const {ChaCha20, Keccak800} = require("uluru-crypto")
+//using ESM import
+import Uluru from "uluru-crypto"
+const {ChaCha20, Keccak800} = Uluru
 ```
 Type declarations are present as well, located in the uluru.d.ts file.
 ### Browser
