@@ -217,7 +217,7 @@ Uluru also provides a simplified function that returns the stringified keypair o
 //using the simplified function
 let keypairstring = Uluru.rsaGenerate()
 //the stringified keys are separated by "!"
-let publickeystr, privatekeystr = keypairstring.split("!")
+let [publickeystr, privatekeystr] = keypairstring.split("!")
 
 // using the basic class interface
 let keypair = Uluru.RSAKeyPair.generate(2560) //the bitlength can be specified

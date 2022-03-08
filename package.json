@@ -2,8 +2,8 @@
   "name": "uluru-crypto",
   "version": "3.4.1",
   "description": "a lightweight cryptographic library designed to be simple to use",
-  "main": "uluru.js",
-  "type": "commonjs",
+  "main": "src/index.ts",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/Franatrtur/ulurujs.git"
@@ -15,9 +15,8 @@
     "test": "test"
   },
   "files": [
-    "uluru.js",
-    "uluru.d.ts",
-    "test/",
+    "browser.js",
+    "src/",
     "build/minify-main.js"
   ],
   "scripts": {
