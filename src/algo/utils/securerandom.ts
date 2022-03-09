@@ -3,25 +3,16 @@ declare const crypto
 
 export let fillRandom: (data: ArrayBufferView) => ArrayBufferView
 
-if(typeof crypto == "object"){
+if(typeof crypto == "object")
+	fillRandom = data => crypto.getRandomValues(data)
 
-	fillRandom = crypto.getRandomValues
-
-}
-else if(typeof global != "object" && typeof window == "object"){
-
+else if(typeof global != "object" && typeof window == "object")
 	fillRandom = undefined
 
-}
 else{
 
 	let nodecrypto = require("crypto")
 
-	fillRandom = function(data: ArrayBufferView){
-
-		nodecrypto.randomFillSync(data)
-		return data
-
-	}
+	fillRandom = data => nodecrypto.randomFillSync(data)
 
 }

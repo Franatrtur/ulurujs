@@ -54,7 +54,7 @@ export default class RSAKey {
 
 		data = typeof data == "string" ? new Utf8().encode(data as string) : data
 
-		let msglen = (bitLen(this.M) >> 3) - 2 - OAEP.hdrlen
+		let msglen = (bitLen(this.M) >> 3) - 2 - OAEP.headerLength
 
 		if(data.byteLength > msglen)
 			throw new Error("Message too long")

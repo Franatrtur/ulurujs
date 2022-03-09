@@ -4,7 +4,7 @@
   "description": "a lightweight cryptographic library designed to be simple to use",
   "main": "./lib/index.js",
   "type": "module",
-  "unpkg": "./dist/uluru-browser.js",
+  "unpkg": "./dist/uluru-browser.min.js",
   "browser": "./dist/uluru-browser.js",
   "repository": {
     "type": "git",
@@ -25,6 +25,7 @@
     "build": "run-p build:**",
     "build:node": "tsc",
     "build:browser": "rollup -c rollup.config.js",
+    "build:browser-ts-d": "tsc --project \"./tsconfig-declare.json\"",
     "bench": "node test/benchmarks",
     "prepare": "npm run build"
   },

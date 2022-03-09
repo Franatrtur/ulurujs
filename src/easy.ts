@@ -8,7 +8,7 @@ const SALTsize = 8
 
 export function encrypt(plaintext: any, password: string){
 
-	let salt = new Random().fill(new Uint8Array(SALTsize))
+	let salt = new Random().bytes(SALTsize)
 
 	let key = new KDF(32, 1000).compute(new Utf8().encode(password), salt)
 
@@ -88,7 +88,7 @@ export function rsaEncrypt(message, pubkeystr){
 
 	let key = RSAKey.fromString(pubkeystr)
 
-	let symkey = new Random().fill(new Uint8Array(32))
+	let symkey = new Random().bytes(32)
 
 	let encsymkey = new Base64().decode(
 		key.encrypt(symkey)

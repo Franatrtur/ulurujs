@@ -24,9 +24,9 @@ function merge(...bufferviews: ArrayBufferView[]){
 
 export default class OAEP {
 
-	static seedlen = SEEDlen
-	static hashlen = HASHlen
-	static hdrlen = HDRlen
+	static seedLength = SEEDlen
+	static hashLength = HASHlen
+	static headerLength = HDRlen
 
 	pad(data: ArrayBufferView, len: number = 128){
 
@@ -37,7 +37,7 @@ export default class OAEP {
 		padxdata.set(new Uint8Array(data.buffer, data.byteOffset, data.byteLength))
 
 		let datalen = new Uint32Array([data.byteLength])
-		let seed = new Random().fill(new Uint8Array(SEEDlen))
+		let seed = new Random().bytes(SEEDlen)
 		let hash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen)
 
 		let header = merge(datalen, seed, hash)
