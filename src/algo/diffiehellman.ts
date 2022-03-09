@@ -1,6 +1,6 @@
-import Base64 from "./base64"
-import PBKDF from "./pbkdf"
-import { Bi, buffviewToBi, biToBuffview, modPow, randomBi } from "./utils-bigint"
+import Base64 from "../enc/base64"
+import KDF from "./kdf"
+import { Bi, buffviewToBi, biToBuffview, modPow, randomBi } from "./utils/bigint"
 
 /**
  * 4096bit diffie-hellman group constants from
@@ -41,9 +41,9 @@ export default class DiffieHellman {
 	public finalize(length = 32){
 
 		if(typeof this.secret != "bigint")
-			throw "Key exchange cannot finalize without receiving"
+			throw new Error("Key exchange cannot finalize without receiving")
 
-		return new PBKDF(length, 1).compute(biToBuffview(this.secret))
+		return new KDF(length, 1).compute(biToBuffview(this.secret))
 
 	}
 

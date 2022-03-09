@@ -1,23 +1,16 @@
-import ChaCha20 from "./chacha20"
-import Keccak800 from "./keccak800"
-import PBKDF from "./pbkdf"
-import Random from "./random"
-import Hex from "./hex"
-import Utf8 from "./utf8"
-import Base64 from "./base64"
-import RSAKey from "./rsakey"
-import RSAKeyPair from "./rsakeypair"
+import { ChaCha20, Keccak800, KDF, HMAC, Random, RSAKey, RSAKeyPair } from "./algo/algo"
+import { Hex, Utf8, Base64 } from "./enc/enc"
 
 //functions for simplified user interaction
 //using pbkdf with 1000 iterations to slow down the key generation
 
-export const SALTsize = 8
+const SALTsize = 8
 
 export function encrypt(plaintext: any, password: string){
 
 	let salt = new Random().fill(new Uint8Array(SALTsize))
 
-	let key = new PBKDF(32, 1000).compute(new Utf8().encode(password), salt)
+	let key = new KDF(32, 1000).compute(new Utf8().encode(password), salt)
 
 	let encryptor = new ChaCha20(key, true, salt)
 
@@ -45,7 +38,7 @@ export function decrypt(ciphertext: string, password: string): any{
 		throw "Incorrectly formated ciphertext"
 	}
 
-	let key = new PBKDF(32, 1000).compute(new Utf8().encode(password), salt)
+	let key = new KDF(32, 1000).compute(new Utf8().encode(password), salt)
 
 	let decryptor = new ChaCha20(key, true, salt)
 
@@ -145,8 +138,8 @@ export function rsaDecrypt(message, privkeystr){
 export function hmac(message, password){
 
 	return new Hex().decode(
-		new Uluru.HMAC(
-			new PBKDF().compute(password)
+		new HMAC(
+			new KDF().compute(password)
 		).update(message).finalize(16)
 	)
 

@@ -1,7 +1,4 @@
-build/*.build.js
-build/*.min.js
+dist/
+lib/
 node_modules/
-uluru.js
-uluru.min.js
-uluru.d.ts
 test/exp.js

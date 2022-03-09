@@ -1,11 +1,12 @@
 import Keccak800 from "./keccak800"
 
-/*
-	* Custom password-based key derivation function
-	* design follows the PBKDF2 construction
-	* allows exctraction of a secret of any length from a source/password, using an optional salt
-	*/
-export default class PBKDF {
+/**
+ * Custom key derivation function.
+ * Design follows the PBKDF2 construction.  
+ * Allows exctraction of a secret of any length from a key/soure of entropy/password, using an optional salt.
+ * Can be used as PBKDF or KBKDF.
+ */
+export default class KDF {
 
 	public outputbytes: number
 	public iterations: number

@@ -1,8 +1,8 @@
-import Base64 from "./base64"
-import Utf8 from "./utf8"
+import Base64 from "../enc/base64"
+import Utf8 from "../enc/utf8"
 import Keccak800 from "./keccak800"
 import OAEP from "./oaep"
-import { Bi, buffviewToBi, biToBuffview, bitLen, modPow } from "./utils-bigint"
+import { Bi, buffviewToBi, biToBuffview, bitLen, modPow } from "./utils/bigint"
 
 export default class RSAKey {
 
@@ -44,7 +44,7 @@ export default class RSAKey {
 		let databi = buffviewToBi(data)
 
 		if(databi >= this.M)
-			throw "Data integer too large"
+			throw new Error("Data integer too large")
 
 		return biToBuffview(modPow(databi, this.E, this.M))
 
@@ -57,7 +57,7 @@ export default class RSAKey {
 		let msglen = (bitLen(this.M) >> 3) - 2 - OAEP.hdrlen
 
 		if(data.byteLength > msglen)
-			throw "Message too long"
+			throw new Error("Message too long")
 
 		return this.process(new OAEP().pad(data, msglen))
 

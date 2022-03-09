@@ -31,7 +31,7 @@ export default class OAEP {
 	pad(data: ArrayBufferView, len: number = 128){
 
 		if(len <= HDRlen)
-			throw "OAEP message length too small"
+			throw new Error("OAEP message length too small")
 
 		let padxdata = new Uint8Array(len - HDRlen)
 		padxdata.set(new Uint8Array(data.buffer, data.byteOffset, data.byteLength))
@@ -75,7 +75,7 @@ export default class OAEP {
 
 		let rehash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen)
 		if(rehash.join(",") != hash.join(","))
-			throw "OAEP invalid padding hash"
+			throw new Error("OAEP invalid padding hash")
 
 		return new Uint8Array(padxdata.buffer, 0, datalen[0])
 		

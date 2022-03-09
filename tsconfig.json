@@ -1,0 +1,33 @@
+{
+
+	"compilerOptions" : {
+
+		"outDir": "lib/",
+
+		"target": "ES6",
+
+		"lib": ["ES6", "DOM", "ESNext"],
+
+		"sourceMap" : false,
+
+		"removeComments": false,
+
+		"declaration": true,
+
+		"watch": false
+
+	},
+
+	"include": [
+
+		"src/"
+
+	],
+
+	"exclude": [
+
+		"src/index-browser.ts"
+
+	],
+
+}

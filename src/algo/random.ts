@@ -1,3 +1,4 @@
+import { fillRandom } from "./utils/securerandom"
 
 const CAPACITY = 16300 //max is 65536 bytes -> 16thousand 32bit words
 
@@ -9,9 +10,9 @@ function RESET(){
 	Pointer = 0
 
 	if(Random.secure)
-		crypto.getRandomValues(Pool)
+		fillRandom(Pool)
 
-	else 
+	else
 		for(let i = 0, l = CAPACITY; i < l; i++)
 			Pool[i] = Math.floor(Math.random() * 0x100000000)
 
@@ -23,7 +24,7 @@ export default class Random {
 
 	static get secure(){
 
-		return typeof crypto == "object" && typeof crypto["getRandomValues"] == "function"
+		return !!fillRandom
 
 	}
 
@@ -71,3 +72,6 @@ export default class Random {
 }
 
 RESET()
+
+if(!Random.secure)
+	console.warn("Couldn't find a secure source of randomness. Make sure you are using a modern browser or node v6+")

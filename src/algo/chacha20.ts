@@ -1,5 +1,5 @@
 import algorithm from "./algorithm"
-import Utf8 from "./utf8"
+import Utf8 from "../enc/utf8"
 
 /**nothing-up-my-sleeve constants "expand 32-byte k"*/
 const CONSTS = new Uint32Array(
