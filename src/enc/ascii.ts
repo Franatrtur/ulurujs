@@ -4,12 +4,12 @@ export default class Ascii implements encoding {
 
 	encode(str: string){
 
-		let u8array = new Uint8Array(str.length)
+		let bytes = new Uint8Array(str.length)
 
 		for(let i = 0, l = str.length; i < l; i++)
-			u8array[i] = str.charCodeAt(i)
+			bytes[i] = str.charCodeAt(i)
 
-		return u8array
+		return bytes
 
 	}
 

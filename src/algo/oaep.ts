@@ -1,32 +1,20 @@
 import Keccak800 from "./keccak800"
 import Random from "./random"
+import { mergeBuffers } from "./utils/buffers"
 
 const SEEDlen = 12
 const HASHlen = 16
 const HDRlen = SEEDlen + HASHlen + 4
 
-function merge(...bufferviews: ArrayBufferView[]){
-
-	let len = 0
-	for(let i = 0; i < bufferviews.length; i++)
-		len += bufferviews[i].byteLength
-
-	let result = new Uint8Array(len)
-	let pointer = 0
-	for(let i = 0; i < bufferviews.length; i++){
-
-		result.set(new Uint8Array(bufferviews[i].buffer, bufferviews[i].byteOffset, bufferviews[i].byteLength), pointer)
-		pointer += bufferviews[i].byteLength
-	}
-
-	return result
-}
-
+/**
+ * OAEP (optimal asymmetric encryption padding) for RSA.
+ * Used internally by the `RSAKey` by default.
+ */
 export default class OAEP {
 
-	static seedLength = SEEDlen
-	static hashLength = HASHlen
-	static headerLength = HDRlen
+	public static seedLength = SEEDlen
+	public static hashLength = HASHlen
+	public static headerLength = HDRlen
 
 	pad(data: ArrayBufferView, len: number = 128){
 
@@ -40,7 +28,7 @@ export default class OAEP {
 		let seed = new Random().bytes(SEEDlen)
 		let hash = new Keccak800().update(padxdata).update(datalen).update(seed).finalize(HASHlen)
 
-		let header = merge(datalen, seed, hash)
+		let header = mergeBuffers(datalen, seed, hash)
 
 		let mask = new Keccak800().update(header).finalize(len - HDRlen)
 		for(let m0 = 0; m0 < len - HDRlen; m0++)
@@ -50,7 +38,7 @@ export default class OAEP {
 		for(let m1 = 0; m1 < HDRlen; m1++)
 			header[m1] ^= mask[m1]
 
-		return merge(header, padxdata)
+		return mergeBuffers(header, padxdata)
 
 	}
 

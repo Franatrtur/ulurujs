@@ -4,10 +4,10 @@ import Utf8 from "../enc/utf8"
 import Hex from "../enc/hex"
 
 const RHOoffsets = new Uint8Array([
-		0,  1, 30, 28, 27,
-		4, 12,  6, 23, 20,
-		3, 10, 11, 25,  7,
-		9, 13, 15, 21,  8,
+	 0,  1, 30, 28, 27,
+	 4, 12,  6, 23, 20,
+	 3, 10, 11, 25,  7,
+	 9, 13, 15, 21,  8,
 	18,  2, 29, 24, 14
 ])
 
@@ -50,37 +50,37 @@ for(let n = 0; n < 25; n++){
 
 }
 
-/*
-	* An implementation of the eccak800 algorithm as accurately as i could (idk about the uint32array endianness, padding etc)
-	* smaller sibling to the keccak1600 used as sha3 (but that requires 64bit words)
-	* built with capacity 64 bytes and 36 private state bytes
-	*/
+/**
+ * An implementation of the Keccak800 hash algorithm,
+ * smaller sibling to the keccak1600 used as sha3 (but that requires 64bit words).
+ * Built with capacity 64 bytes and 36 private state bytes.
+ */
 export default class Keccak800 implements algorithm {
 
-	public static blockbytes = 64
+	public static blockBytes = 64
 
 	private state: Uint32Array = new Uint32Array(25)
-	private temp: Uint32Array = new Uint32Array(25)
+	private tempState: Uint32Array = new Uint32Array(25)
 	private theta: Uint32Array = new Uint32Array(5)
 
 	public data: Uint32Array | Uint8Array
 	public pointer: number
 
-	private padblock: Uint32Array = new Uint32Array(16)
-	private padsigbytes: number
+	private padBlock: Uint32Array = new Uint32Array(16)
+	private padSigBytes: number
 
 	public reset(){
 
 		this.state.fill(0)
 
-		this.temp.fill(0)
+		this.tempState.fill(0)
 		this.theta.fill(0)
 
 		this.data = new Uint32Array(0)
 		this.pointer = 0
 
-		this.padblock.fill(0)
-		this.padsigbytes = 0
+		this.padBlock.fill(0)
+		this.padSigBytes = 0
 
 	}
 
@@ -92,12 +92,15 @@ export default class Keccak800 implements algorithm {
 
 	private keccakF(state){
 
-		let temp = this.temp,
+		let tempState = this.tempState,
 			theta = this.theta
-		let off, tmp
+
+		let offset: number,
+			xWord: number
 
 		for(let round = 0; round < 22; round++){
 
+			//theta step
 			theta[0] = state[ 0] ^ state[ 1] ^ state[ 2] ^ state[ 3] ^ state[ 4]
 			theta[1] = state[ 5] ^ state[ 6] ^ state[ 7] ^ state[ 8] ^ state[ 9]
 			theta[2] = state[10] ^ state[11] ^ state[12] ^ state[13] ^ state[14]
@@ -106,19 +109,22 @@ export default class Keccak800 implements algorithm {
 
 			for(let i = 0; i < 25; i++){
 
-				tmp = theta[XMP1[i]]
+				//theta - mix surrounding collumns
+				xWord = theta[XMP1[i]]
+				state[i] ^= theta[XMM1[i]] ^ (xWord << 1 | xWord >>> 31)
 
-				state[i] ^= theta[XMM1[i]] ^ (tmp << 1 | tmp >>> 31)
-
-				off = RHOoffsets[i]
-				tmp = state[i]
-				temp[XYP[i]] = tmp << off | tmp >>> (32 - off)
+				//rho and pi steps
+				offset = RHOoffsets[i]
+				xWord = state[i]
+				tempState[XYP[i]] = xWord << offset | xWord >>> (32 - offset)
 
 			}
 
+			//chi step
 			for(let i = 0; i < 25; i++)
-				state[i] = temp[i] ^ (~temp[XP1[i]] & temp[XP2[i]])
+				state[i] = tempState[i] ^ (~tempState[XP1[i]] & tempState[XP2[i]])
 
+			//iota step
 			state[0] ^= RCs[round]
 
 		}
@@ -131,7 +137,7 @@ export default class Keccak800 implements algorithm {
 
 		for(let b = 0; b < blocks; b++){
 
-			for(let w = 0; w < 16; w++)
+			for(let w = 0; w < 16; w++) //absorb block
 				this.state[w] ^= this.data[this.pointer + w]
 
 			this.keccakF(this.state)
@@ -139,10 +145,10 @@ export default class Keccak800 implements algorithm {
 
 		}
 
-		if(flush){ //will run even if this.padsigbytes == 0, which is what we want
+		if(flush){ //will run even if this.padSigBytes == 0, which is what we want
 
-			for(let w = 0; w < 16; w++)
-				this.state[w] ^= this.padblock[w]
+			for(let w = 0; w < 16; w++) //absorb block
+				this.state[w] ^= this.padBlock[w]
 
 			this.keccakF(this.state)
 
@@ -155,40 +161,42 @@ export default class Keccak800 implements algorithm {
 		data = typeof data == "string" ? new Utf8().encode(data as string) : data
 
 		//shortcuts for the minifier
-		let padblock: any = this.padblock
-		let padsigbytes = this.padsigbytes
+		let padBlock: any = this.padBlock
+		let padSigBytes = this.padSigBytes
 
-		//incomplete block
-		if(data.byteLength + padsigbytes < 64){
+		//create an incomplete block
+		if(data.byteLength + padSigBytes < 64){
 
-			padblock = new Uint8Array(padblock.buffer)
-			padblock.set(new Uint8Array(data.buffer, data.byteOffset, data.byteLength), padsigbytes)
+			padBlock = new Uint8Array(padBlock.buffer)
+			padBlock.set(new Uint8Array(data.buffer, data.byteOffset, data.byteLength), padSigBytes)
 
-			padblock[padblock.length - 1] = 0x80
-			padblock[data.byteLength + padsigbytes] ^= 0x06
+			padBlock[padBlock.length - 1] = 0x80
+			padBlock[data.byteLength + padSigBytes] ^= 0x06
 
-			this.padblock = new Uint32Array(padblock.buffer)
-			this.padsigbytes += data.byteLength
+			this.padBlock = new Uint32Array(padBlock.buffer)
+			this.padSigBytes += data.byteLength
 
 		}
 		//new complete block
 		else{
 
-			let newlen = (padsigbytes + data.byteLength) >> 6 << 6 // floor(len / 64) * 64
-			let overflow = (padsigbytes + data.byteLength) % 64
+			let newLength = (padSigBytes + data.byteLength) >> 6 << 6 // floor(len / 64) * 64
+			let overflow = (padSigBytes + data.byteLength) % 64
 
 			//optimization, use existing data buffer we can, useful for repeptitive updating
-			this.data = this.data.byteLength > newlen ? new Uint8Array(this.data.buffer, 0, newlen) : new Uint8Array(newlen)
+			this.data = this.data.byteLength > newLength ?
+				new Uint8Array(this.data.buffer, 0, newLength) :
+				new Uint8Array(newLength)
 
-			this.data.set(new Uint8Array(padblock.buffer, 0, padsigbytes))
-			this.data.set(new Uint8Array(data.buffer, data.byteOffset, data.byteLength - overflow), padsigbytes)
+			this.data.set(new Uint8Array(padBlock.buffer, 0, padSigBytes))
+			this.data.set(new Uint8Array(data.buffer, data.byteOffset, data.byteLength - overflow), padSigBytes)
 
-			this.data = new Uint32Array(this.data.buffer, 0, newlen >> 2)
+			this.data = new Uint32Array(this.data.buffer, 0, newLength >> 2)
 
-			//append the overflow as a new incomplete block
+			//append the overflow as a new incomplete block (even if empty)
 
-			padblock.fill(0)
-			this.padsigbytes = 0
+			padBlock.fill(0)
+			this.padSigBytes = 0
 
 			this.append(new Uint8Array(data.buffer, data.byteOffset + data.byteLength - overflow, overflow))
 
@@ -212,6 +220,7 @@ export default class Keccak800 implements algorithm {
 		let len = Math.ceil(outputbytes / 64) * 16
 		let words = new Uint32Array(len)
 
+		//squeezing phase
 		for(let i = 0; i < len; i += 16){
 
 			words.set(new Uint32Array(this.state.buffer, 0, 16), i)
@@ -222,11 +231,12 @@ export default class Keccak800 implements algorithm {
 		this.data = new Uint32Array(0)
 		this.pointer = 0
 
-		this.padblock.fill(0)
-		this.padsigbytes = 0
+		this.padBlock.fill(0)
+		this.padSigBytes = 0
 
 		let result = new Uint8Array(words.buffer, 0, outputbytes)
 
+		//legacy automatic stringifying method
 		result.toString = function(encoder: encoding = new Hex){
 
 			return encoder.decode(this)

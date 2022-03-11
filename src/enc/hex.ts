@@ -28,12 +28,12 @@ export default class Hex implements encoding {
 
 	decode(bytes: ArrayBufferView){
 
-		let bytearr = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+		let byteArr = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 
-		let str = Array(bytearr.length)
+		let str = Array(byteArr.length)
 
-		for(let byte = 0; byte < bytearr.length; byte++)
-			str[byte] = hexcodes[bytearr[byte]]
+		for(let byte = 0; byte < byteArr.length; byte++)
+			str[byte] = hexcodes[byteArr[byte]]
 
 		return str.join("")
 

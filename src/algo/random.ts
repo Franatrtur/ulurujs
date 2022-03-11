@@ -1,12 +1,19 @@
 import { fillRandom } from "./utils/securerandom"
 
 const CAPACITY = 16300 //max is 65536 bytes -> 16thousand 32bit words
-const SECURE = typeof fillRandom == "function"
+const SECURE = typeof fillRandom == "function" //prefer safe randomness from crypto/webcrypto
 
+/**
+ * Private buffer filled with random 32bit words.  
+ * Remains hidden in the module scope.
+ */
 const Pool = new Uint32Array(CAPACITY)
 let Pointer = 0
 
-
+/**
+ * Once all the words in `Pool` (the random buffer) are used,
+ * they are discarded and rewritten with new random data.
+ */
 function RESET(){
 
 	Pointer = 0
@@ -20,10 +27,14 @@ function RESET(){
 
 }
 
+/**
+ * An exposed class for extracting randomness from a private random buffer.  
+ * Allows to fill/create typed arrays with random data or generate random 32bit integer words.
+ */
 export default class Random {
 
-	static capacity = CAPACITY
-	static secure = SECURE
+	public static capacity = CAPACITY
+	public static secure = SECURE
 
 	public word(){
 
@@ -39,24 +50,28 @@ export default class Random {
 		if(SECURE && data.byteLength <= CAPACITY)
 			return fillRandom(data)
 
-		RESET()
+		if(Pointer > 0)
+			RESET()
 
-		let wrds = new Uint32Array(data.buffer, data.byteOffset, data.byteLength >> 2)
+		//copy over whole 32bit random words
 
-		for(let i = 0, l = wrds.length; i < l; i += CAPACITY){
+		let dataWords = new Uint32Array(data.buffer, data.byteOffset, data.byteLength >> 2)
 
-			wrds.set(new Uint32Array(Pool.buffer, 0, Math.min((l - i), CAPACITY)), i)
+		for(let i = 0, l = dataWords.length; i < l; i += CAPACITY){
+
+			dataWords.set(new Uint32Array(Pool.buffer, 0, Math.min((l - i), CAPACITY)), i)
 
 			RESET()
 
 		}
 
-		let roundedbytes = data.byteLength >> 2 << 2
+		let bytesDone = data.byteLength >> 2 << 2
 
-		let bytes = new Uint8Array(data.buffer, roundedbytes, data.byteLength - roundedbytes)
+		let overflowBytes = new Uint8Array(data.buffer, bytesDone, data.byteLength - bytesDone)
+		let randomWord = this.word()
 
-		for(let i = 0, l = bytes.length; i < l; i++)
-			bytes[i] = this.word()
+		for(let i = 0, l = overflowBytes.length; i < l; i++)
+			overflowBytes[i] = randomWord >>> (i * 8) & 0xff //extract the next byte from the word
 
 		return data
 
@@ -72,5 +87,6 @@ export default class Random {
 
 RESET()
 
+//warn if we have to use math.random
 if(!SECURE)
 	console.warn("Couldn't find a secure source of randomness. Make sure you are using a modern browser or node v6+")

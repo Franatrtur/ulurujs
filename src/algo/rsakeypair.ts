@@ -9,9 +9,10 @@ const PRIVATEprefix = ["\n==BEGIN ULURU PRIVATE KEY==\n", "\n==END ULURU PRIVATE
 
 export default class RSAKeyPair {
 
-	static pubexp = PUBEXP
-	static publicprefix = PUBLICprefix
-	static privateprefix = PRIVATEprefix
+	public static publicExponent = PUBEXP
+
+	public static publicPrefix = PUBLICprefix
+	public static privatePrefix = PRIVATEprefix
 
 	static fromString(str: string){
 

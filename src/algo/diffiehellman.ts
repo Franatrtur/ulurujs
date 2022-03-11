@@ -3,7 +3,7 @@ import KDF from "./kdf"
 import { Bi, buffviewToBi, biToBuffview, modPow, randomBi } from "./utils/bigint"
 
 /**
- * 4096bit diffie-hellman group constants from
+ * 4096bit diffie-hellman group constant from
  * @see https://www.rfc-editor.org/rfc/rfc3526
  */
 const MODPgroup = buffviewToBi(new Base64().encode(
@@ -12,6 +12,13 @@ const MODPgroup = buffviewToBi(new Base64().encode(
 
 const GENERATOR = Bi(2)
 
+/**
+ * A basic diffie-hellman protocol.
+ * An instance of the class acts as one party in the key exchange.  
+ * 
+ * Parties can be for example client(browser)-server(node).
+ * Both parties exchange the send() parts and derive a shared secret, usually used as a key for symmetric encryption
+ */
 export default class DiffieHellman {
 
 	static generator = GENERATOR

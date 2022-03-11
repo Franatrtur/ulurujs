@@ -8,19 +8,19 @@ import Keccak800 from "./keccak800"
  */
 export default class KDF {
 
-	public outputbytes: number
+	public outputBytes: number
 	public iterations: number
 
 	constructor(outputbytes = 32, iterations = 1000){
 
-		this.outputbytes = outputbytes
+		this.outputBytes = outputbytes
 		this.iterations = iterations
 		
 	}
 
 	public compute(password: ArrayBufferView | string, salt: ArrayBufferView = new Uint32Array(0)){
 
-		let result = new Uint8Array(this.outputbytes)
+		let result = new Uint8Array(this.outputBytes)
 		let block
 		let hasher = new Keccak800()
 		let counter = new Uint32Array(1)

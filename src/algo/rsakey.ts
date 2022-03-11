@@ -15,6 +15,7 @@ export default class RSAKey {
 	static fromString(str: string){
 
 		let splitted = str.split("<")[1].split(">")[0].split("|")
+
 		return this.fromBufferViews(new Base64().encode(splitted[0]), new Base64().encode(splitted[1]))
 
 	}
@@ -41,12 +42,12 @@ export default class RSAKey {
 
 	private process(data: ArrayBufferView){
 
-		let databi = buffviewToBi(data)
+		let dataBi = buffviewToBi(data)
 
-		if(databi >= this.M)
+		if(dataBi >= this.M)
 			throw new Error("Data integer too large")
 
-		return biToBuffview(modPow(databi, this.E, this.M))
+		return biToBuffview(modPow(dataBi, this.E, this.M))
 
 	}
 
@@ -71,8 +72,6 @@ export default class RSAKey {
 
 	public sign(data: ArrayBufferView | string){
 
-		data = typeof data == "string" ? new Utf8().encode(data as string) : data
-
 		let hash = new Keccak800().update(data).finalize(64)
 
 		return this.encrypt(hash)
@@ -86,9 +85,9 @@ export default class RSAKey {
 			data = typeof data == "string" ? new Utf8().encode(data as string) : data
 
 			let hash = new Keccak800().update(data).finalize(64)
-			let authcode = this.decrypt(signature)
+			let authCode = this.decrypt(signature)
 
-			return hash.join(",") == authcode.join(",")
+			return hash.join(",") == authCode.join(",")
 
 		}
 		catch(e){

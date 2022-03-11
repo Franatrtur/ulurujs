@@ -50,15 +50,15 @@ export default class Base64 implements encoding {
 
 	decode(bytes: ArrayBufferView){
 
-		let bytearr = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+		let byteArr = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 
 		if(typeof btoa == "function")
-			return btoa(new Ascii().decode(bytearr))
+			return btoa(new Ascii().decode(byteArr))
 
 		let str: string[] | string = []
 		let mod3 = 2, u24 = 0
 
-		for(let i = 0, l = bytearr.length; i < l; i++){
+		for(let i = 0, l = byteArr.length; i < l; i++){
 
 			/* not support ancient line wrapping
 
@@ -67,9 +67,9 @@ export default class Base64 implements encoding {
 			amogus*/
 
 			mod3 = i % 3
-			u24 |= bytearr[i] << (16 >>> mod3 & 24)
+			u24 |= byteArr[i] << (16 >>> mod3 & 24)
 
-			if(mod3 == 2 || bytearr.length - i == 1){
+			if(mod3 == 2 || byteArr.length - i == 1){
 
 				str.push(
 					b64chars.charAt(u24 >>> 18 & 0x3f) +

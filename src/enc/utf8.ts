@@ -51,34 +51,34 @@ export default class Utf8 implements encoding {
 
 	decode(bytes: ArrayBufferView){
 
-		let bytearr = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+		let byteArr = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 
 		if(typeof TextDecoder == "function")
-			return new TextDecoder().decode(bytearr)
+			return new TextDecoder().decode(byteArr)
 
-		let str = []
-		let ucpoint
+		let str: string[] = []
+		let unicodePoint: number
 
-		for(let i = 0, l = bytearr.length; i < l;){
+		for(let i = 0, l = byteArr.length; i < l;){
 
 			//one UTF-8 byte (0xxxxxxx)
-			if(bytearr[i] < 0x80)
-				str.push(String.fromCharCode(bytearr[i++]))
+			if(byteArr[i] < 0x80)
+				str.push(String.fromCharCode(byteArr[i++]))
 				
 			//two UTF-8 bytes (110xxxxx 10xxxxxx)
-			else if(bytearr[i] >= 0xc0 && bytearr[i] < 0xe0)
-				str.push(String.fromCharCode(((bytearr[i++] & 0x1f) << 6) | (bytearr[i++] & 0x3f)))
+			else if(byteArr[i] >= 0xc0 && byteArr[i] < 0xe0)
+				str.push(String.fromCharCode(((byteArr[i++] & 0x1f) << 6) | (byteArr[i++] & 0x3f)))
 
 			//three UTF-8 bytes (1110xxxx 10xxxxxx 10xxxxxx)
-			else if(bytearr[i] >= 0xe0 && bytearr[i] < 0xf0)
-				str.push(String.fromCharCode(((bytearr[i++] & 0x0f) << 12) | ((bytearr[i++] & 0x3f) << 6) | (bytearr[i++] & 0x3f)))
+			else if(byteArr[i] >= 0xe0 && byteArr[i] < 0xf0)
+				str.push(String.fromCharCode(((byteArr[i++] & 0x0f) << 12) | ((byteArr[i++] & 0x3f) << 6) | (byteArr[i++] & 0x3f)))
 
 			//four UTF-8 bytes (11110xxx 10xxxxxx 10xxxxxx 10xxxxxx)
-			else if(bytearr[i] >= 0xf0 && bytearr[i] < 0xf7){
+			else if(byteArr[i] >= 0xf0 && byteArr[i] < 0xf7){
 
-				ucpoint = ((bytearr[i++] & 0x07) << 18) | ((bytearr[i++] & 0x3f) << 12) | ((bytearr[i++] & 0x3f) << 6) | (bytearr[i++] & 0x3f)
+				unicodePoint = ((byteArr[i++] & 0x07) << 18) | ((byteArr[i++] & 0x3f) << 12) | ((byteArr[i++] & 0x3f) << 6) | (byteArr[i++] & 0x3f)
 				
-				str.push(String.fromCodePoint(ucpoint))
+				str.push(String.fromCodePoint(unicodePoint))
 			
 			}
 				

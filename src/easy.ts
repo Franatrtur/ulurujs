@@ -1,8 +1,7 @@
 import { ChaCha20, Keccak800, KDF, HMAC, Random, RSAKey, RSAKeyPair } from "./algo/algo"
 import { Hex, Utf8, Base64 } from "./enc/enc"
 
-//functions for simplified user interaction
-//using pbkdf with 1000 iterations to slow down the key generation
+//functions for simplified user interface
 
 const SALTsize = 8
 
@@ -55,7 +54,11 @@ export function decrypt(ciphertext: string, password: string): any{
 
 export function hash(text){
 
-	return new Hex().decode(new Keccak800().update(new Utf8().encode(text)).finalize())
+	return new Hex().decode(
+		new Keccak800().update(
+			new Utf8().encode(text)
+		).finalize()
+	)
 
 }
 

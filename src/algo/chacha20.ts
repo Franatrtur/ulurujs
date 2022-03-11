@@ -25,35 +25,35 @@ export default class ChaCha20 implements algorithm {
 	private xstate: Uint32Array = new Uint32Array(16)
 	private mask: Uint32Array = new Uint32Array(16)
 	
-	public domac: boolean
-	private cmac: Uint32Array | false
-	private pmac: Uint32Array | false
+	public doMac: boolean
+	private Cmac: Uint32Array | false
+	private Pmac: Uint32Array | false
 	
 	private data: Uint32Array | Uint8Array
 	public pointer: number
-	public sigbytes: number
+	public sigBytes: number
 
 	public reset(){
 
 		this.xstate.fill(0)
 
-		this.pmac = this.cmac = false
+		this.Pmac = this.Cmac = false
 
 		//add in the spreaded entropy to initialize the mac states
-		if(this.domac){
+		if(this.doMac){
 
-			this.pmac = new Uint32Array(4)
+			this.Pmac = new Uint32Array(4)
 
 			for(let i = 0; i < 16; i++)
-				this.pmac[i & 3] ^= this.mask[i]
+				this.Pmac[i & 3] ^= this.mask[i]
 
-			this.cmac = this.pmac.slice()
+			this.Cmac = this.Pmac.slice()
 
 		}
 
 		this.data = new Uint32Array(0)
 		this.pointer = 0
-		this.sigbytes = 0
+		this.sigBytes = 0
 
 	}
 
@@ -70,17 +70,15 @@ export default class ChaCha20 implements algorithm {
 		//spread entropy
 		for(let init = 0; init < 10; init++){
 
-			//cols
-			for(let ev = 0; ev < 4; ev++)
+			for(let ev = 0; ev < 4; ev++) //cols
 				this.QR(this.mask, ev, ev + 4, ev + 8, ev + 12)
 
-			//rows
-			for(let od = 0; od < 16; od += 4)
+			for(let od = 0; od < 16; od += 4) //rows
 				this.QR(this.mask, od, od + 1, od + 2, od + 3)
 
 		}
 
-		this.domac = !!mac
+		this.doMac = !!mac
 
 		this.reset()
 
@@ -98,6 +96,7 @@ export default class ChaCha20 implements algorithm {
 
 	}
 
+	/**ChaCha mixing Quarter-round */
 	private QR(state: Uint32Array, A: number, B: number, C: number, D: number){
 
 		state[A] += state[B]
@@ -118,19 +117,16 @@ export default class ChaCha20 implements algorithm {
 
 	}
 
-	public getmac(){
+	public getMac(){
 
-		if(!this.domac)
+		if(!this.doMac)
 			return false
 
-		let pm = this.pmac,
-			cm = this.cmac
-
 		let mac = new Uint32Array([
-			pm[0] + cm[0],
-			pm[1] + cm[1],
-			pm[2] + cm[2],
-			pm[3] + cm[3],
+			this.Pmac[0] + this.Cmac[0],
+			this.Pmac[1] + this.Cmac[1],
+			this.Pmac[2] + this.Cmac[2],
+			this.Pmac[3] + this.Cmac[3],
 		])
 
 		//20 quarter rounds
@@ -144,7 +140,7 @@ export default class ChaCha20 implements algorithm {
 		}
 
 		for(let re = 0; re < 4; re++)
-			mac[re] ^= pm[re] ^ cm[re]
+			mac[re] ^= this.Pmac[re] ^ this.Cmac[re]
 
 		return new Uint8Array(mac.buffer)
 
@@ -152,55 +148,54 @@ export default class ChaCha20 implements algorithm {
 
 	private process(flush = false){
 
-		let blocks = (flush ? Math.ceil : Math.floor)((this.sigbytes - this.pointer) / 16)
+		let blocks = (flush ? Math.ceil : Math.floor)((this.sigBytes - this.pointer) / 16)
 
 		let ptw, ctw
 
-		let end = Math.ceil(this.sigbytes / 4) - 1
-		let erase = 4 - this.sigbytes % 4
-		let domac = !!this.domac
+		let end = Math.ceil(this.sigBytes / 4) - 1
+		let erase = 4 - this.sigBytes % 4
 
-		let xs = this.xstate
+		let xState = this.xstate
 
 		for(let b = 0; b < blocks; b++){
 
-			xs.set(this.state)
+			xState.set(this.state)
 
 			//permute
 			for(let drnd = 0; drnd < 20; drnd += 2){
 
 				//even round - columns
-				this.QR(xs, 0, 4,  8, 12)
-				this.QR(xs, 1, 5,  9, 13)
-				this.QR(xs, 2, 6, 10, 14)
-				this.QR(xs, 3, 7, 11, 15)
+				this.QR(xState, 0, 4,  8, 12)
+				this.QR(xState, 1, 5,  9, 13)
+				this.QR(xState, 2, 6, 10, 14)
+				this.QR(xState, 3, 7, 11, 15)
 
 				//odd round - diagonals
-				this.QR(xs, 0, 5, 10, 15)
-				this.QR(xs, 1, 6, 11, 12)
-				this.QR(xs, 2, 7,  8, 13)
-				this.QR(xs, 3, 4,  9, 14)
+				this.QR(xState, 0, 5, 10, 15)
+				this.QR(xState, 1, 6, 11, 12)
+				this.QR(xState, 2, 7,  8, 13)
+				this.QR(xState, 3, 4,  9, 14)
 
 			}
 
-			//combine
+			//combine the keystream with the data
 			for(let i = 0; i < 16 && this.pointer + i <= end; i++){
 
 				ptw = this.data[this.pointer + i]
-				ctw = ptw ^ (xs[i] + this.mask[i])
+				ctw = ptw ^ (xState[i] + this.mask[i])
 
 				if(this.pointer + i == end)
-					ctw = ctw << erase * 8 >>> erase * 8 //erase the needless bytes, keeping in mind that uint32array is little-endian!
+					ctw = ctw << erase * 8 >>> erase * 8 //erase the needless bytes (+uint32array is little-endian!)
 
 				this.data[this.pointer + i] = ctw
 
-				if(domac){
+				if(this.doMac){
 
-					this.pmac[i & 3] ^= ptw // i & 3 is the same as i % 4
-					this.cmac[i & 3] ^= ctw
+					this.Pmac[i & 3] ^= ptw // i & 3 = i % 4
+					this.Cmac[i & 3] ^= ctw
 
-					this.QR(this.pmac as Uint32Array, (i + 3) & 3, i & 3, (i + 1) & 3, (i + 2) & 3)
-					this.QR(this.cmac as Uint32Array, (i + 3) & 3, i & 3, (i + 1) & 3, (i + 2) & 3)
+					this.QR(this.Pmac as Uint32Array, (i + 3) & 3, i & 3, (i + 1) & 3, (i + 2) & 3)
+					this.QR(this.Cmac as Uint32Array, (i + 3) & 3, i & 3, (i + 1) & 3, (i + 2) & 3)
 					
 				}
 				
@@ -220,23 +215,24 @@ export default class ChaCha20 implements algorithm {
 
 		let old = this.data
 
-		let newlen = Math.ceil((this.sigbytes + data.byteLength) / 64) * 64
-		this.data = new Uint8Array(newlen)
+		this.data = new Uint8Array(
+			Math.ceil((this.sigBytes + data.byteLength) / 64) * 64
+		)
 
-		this.data.set(new Uint8Array(old.buffer, 0, this.sigbytes))
-		this.data.set(new Uint8Array(data.buffer, data.byteOffset, data.byteLength), this.sigbytes)
+		this.data.set(new Uint8Array(old.buffer, 0, this.sigBytes))
+		this.data.set(new Uint8Array(data.buffer, data.byteOffset, data.byteLength), this.sigBytes)
 
 		this.data = new Uint32Array(this.data.buffer)
-		this.sigbytes += data.byteLength
+		this.sigBytes += data.byteLength
 
 	}
 
 	public verify(mac: ArrayBufferView){
 
-		if(!this.domac)
-			return null
+		if(!this.doMac)
+			return
 
-		return (this.getmac() as Uint8Array).join(",") === new Uint8Array(mac.buffer, mac.byteOffset, mac.byteLength).join(",")
+		return (this.getMac() as Uint8Array).join(",") === new Uint8Array(mac.buffer, mac.byteOffset, mac.byteLength).join(",")
 
 	}
 
@@ -254,13 +250,13 @@ export default class ChaCha20 implements algorithm {
 		this.process(true)
 
 		let result = {
-			data: new Uint8Array(this.data.buffer, 0, this.sigbytes),
-			mac: this.getmac()
+			data: new Uint8Array(this.data.buffer, 0, this.sigBytes),
+			mac: this.getMac()
 		}
 
 		this.data = new Uint32Array(0)
 		this.pointer = 0
-		this.sigbytes = 0
+		this.sigBytes = 0
 
 		return result
 
