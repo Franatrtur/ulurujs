@@ -1,6 +1,6 @@
 
-var Uluru = Uluru || require("../uluru")
-var {performance} = typeof performance == "object" ? {performance} : require('perf_hooks')
+import Uluru from "../lib/index.js"
+import {performance} from 'perf_hooks'
 
 
 let ERRORS = []
@@ -78,7 +78,7 @@ Run("Ascii encoding", () => {
 		}
 	]
 
-	return encodingTester(new Uluru.enc.Ascii(), streams)
+	return encodingTester(new Uluru.Ascii(), streams)
 
 })
 
@@ -91,7 +91,7 @@ Run("Base64 encoding", () => {
 		}
 	]
 
-	return encodingTester(new Uluru.enc.Base64(), streams)
+	return encodingTester(new Uluru.Base64(), streams)
 
 })
 
@@ -104,7 +104,7 @@ Run("Hex encoding", () => {
 		}
 	]
 
-	return encodingTester(new Uluru.enc.Hex(), streams)
+	return encodingTester(new Uluru.Hex(), streams)
 
 })
 
@@ -124,7 +124,7 @@ Run("Utf8 encoding", () => {
 		}
 	]
 
-	return encodingTester(new Uluru.enc.Utf8(), streams)
+	return encodingTester(new Uluru.Utf8(), streams)
 
 })
 

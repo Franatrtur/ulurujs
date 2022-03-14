@@ -1,5 +1,5 @@
-import RSAKey from "./rsakey"
-import { Bi, modInv, getPrime } from "./utils/bigint"
+import RSAKey from "./rsakey.js"
+import { Bi, modInv, getPrime } from "./utils/bigint.js"
 
 //public exponent - fermat prime 257 (=2**8+1)
 const PUBEXP = Bi(0x101)

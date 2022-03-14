@@ -1,11 +1,11 @@
-import { ChaCha20, Keccak800, KDF, HMAC, Random, RSAKey, RSAKeyPair } from "./algo/algo"
-import { Hex, Utf8, Base64 } from "./enc/enc"
+import { ChaCha20, Keccak800, KDF, HMAC, Random, RSAKey, RSAKeyPair } from "./algo/algo.js"
+import { Hex, Utf8, Base64 } from "./enc/enc.js"
 
 //functions for simplified user interface
 
 const SALTsize = 8
 
-export function encrypt(plaintext: any, password: string){
+export function encrypt(plaintext: string, password: string){
 
 	let salt = new Random().bytes(SALTsize)
 
@@ -22,7 +22,7 @@ export function encrypt(plaintext: any, password: string){
 			new Hex().decode(encrypted.mac as Uint8Array)
 }
 
-export function decrypt(ciphertext: string, password: string): any{
+export function decrypt(ciphertext: string, password: string){
 
 	let salt, cdata, mac
 

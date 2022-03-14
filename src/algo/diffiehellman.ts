@@ -1,6 +1,6 @@
-import Base64 from "../enc/base64"
-import KDF from "./kdf"
-import { Bi, buffviewToBi, biToBuffview, modPow, randomBi } from "./utils/bigint"
+import Base64 from "../enc/base64.js"
+import KDF from "./kdf.js"
+import { Bi, buffviewToBi, biToBuffview, modPow, randomBi } from "./utils/bigint.js"
 
 /**
  * 4096bit diffie-hellman group constant from

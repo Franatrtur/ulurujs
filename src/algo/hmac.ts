@@ -1,5 +1,5 @@
-import algorithm from "./algorithm"
-import Keccak800 from "./keccak800"
+import algorithm from "./algorithm.js"
+import Keccak800 from "./keccak800.js"
 
 const OKpad = 0x5c
 const IKpad = 0x36

@@ -1,4 +1,4 @@
-import encoding from "./encoding"
+import encoding from "./encoding.js"
 
 //hex lookup tables
 let hexcodes = Array(256)

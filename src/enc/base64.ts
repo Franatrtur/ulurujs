@@ -1,5 +1,5 @@
-import encoding from "./encoding"
-import Ascii from "./ascii"
+import encoding from "./encoding.js"
+import Ascii from "./ascii.js"
 
 //base 64 lookup tables
 

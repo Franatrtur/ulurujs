@@ -1,7 +1,7 @@
-import algorithm from "./algorithm"
-import encoding from "../enc/encoding"
-import Utf8 from "../enc/utf8"
-import Hex from "../enc/hex"
+import algorithm from "./algorithm.js"
+import encoding from "../enc/encoding.js"
+import Utf8 from "../enc/utf8.js"
+import Hex from "../enc/hex.js"
 
 const RHOoffsets = new Uint8Array([
 	 0,  1, 30, 28, 27,

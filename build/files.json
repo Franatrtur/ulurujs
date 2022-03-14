@@ -1,0 +1,6 @@
+[
+	{
+		"buildName": "securerandom.ts",
+		"destination": "algo/utils/securerandom.ts"
+	}
+]

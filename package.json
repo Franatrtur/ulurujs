@@ -22,10 +22,14 @@
   ],
   "scripts": {
     "test": "node --trace-uncaught test/test",
-    "build": "run-p build:**",
-    "build:node": "tsc",
-    "build:browser": "rollup -c rollup.config.js",
-    "build:browser-ts-d": "tsc --project \"./tsconfig-declare.json\"",
+    "build": "run-s build:**",
+    "build:node": "run-s build-node:**",
+    "build-node:1prepare": "node build/node.js",
+    "build-node:2compile": "tsc",
+    "build:browser": "run-s build-browser:**",
+    "build-browser:1prepare": "node build/browser.js",
+    "build-browser:2build": "rollup -c rollup.config.js",
+    "build-browser:3declare": "tsc --project \"./tsconfig-declare.json\"",
     "bench": "node test/benchmarks",
     "prepare": "npm run build"
   },
