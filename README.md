@@ -25,6 +25,13 @@ Browser:
 	const { encrypt, decrypt, hash } = Uluru
 </script>
 ```
+
+
+
+
+
+
+
 # Docs
 ## Table of contents
  1. [Including Uluru in your project](#including-uluru-in-your-project)
@@ -102,11 +109,10 @@ class Ascii, Utf8, Hex, Base64 implements encoding
 Example usages:
 ```javascript
 const utf8 = new Uluru.Utf8() //init an encoder
-let binaryData = utf8.encode("a utf8 string 🤩Ξ↝") //returns a uint8array
-let stringAgain = utf8.decode(binaryData) //returns "a utf8 string 🤩Ξ↝"
+let binaryData = utf8.encode("a unicode string 🤩Ξ↝") //returns a uint8array
+let stringAgain = utf8.decode(binaryData) //returns "a unicode string 🤩Ξ↝"
 //or create an anonoymous encoder
-binaryData = new Uluru.Hex().encode("0f5e6a2669") //returns a uint8array
-stringAgain = new Uluru.Hex().decode(binaryData) //returns "0f5e6a2669"
+stringAgain = new Uluru.Hex().decode(binaryData) //returns a hex string "612075...
 ```
 ## Hashing
 Uluru crypto implements the [Keccak algorithm](https://keccak.team/) (the winner of the [SHA3](https://en.wikipedia.org/wiki/SHA-3) contest) in the variant Keccak800. This version, using 32bit words so that it works fast in javascript, is very secure. (s = 800, r = 512, c = 288).  

@@ -9,9 +9,9 @@ const __dirname = dirname(__filename) + "\\"
 let fileContents = fs.readFileSync(__dirname + '\\files.json')
 let fileList = JSON.parse(fileContents)
 
-let fixSlashes = pth => pth.split("/").join("\\")
+const fixSlashes = pth => pth.split("/").join("\\")
 
-const warningNotice = "//NODE VERSION, see ../build/\n\n"
+const warningNotice = "//NODE VERSION, see build/*/"
 const destDir = __dirname + "..\\src\\"
 
 const buildDir = __dirname + ".\\node\\"
@@ -19,7 +19,7 @@ const buildDir = __dirname + ".\\node\\"
 for(let file of fileList){
 
 	fs.writeFileSync(destDir + fixSlashes(file.destination),
-		warningNotice + fs.readFileSync(buildDir + fixSlashes(file.buildName))
+		warningNotice + file.buildName + "\n\n" + fs.readFileSync(buildDir + fixSlashes(file.buildName))
 	)
 
 }
