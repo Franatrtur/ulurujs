@@ -1,6 +1,6 @@
 {
   "name": "uluru-crypto",
-  "version": "4.0.0",
+  "version": "4.0.2",
   "description": "a lightweight cryptographic library designed to be simple to use",
   "main": "./lib/index.js",
   "type": "module",
