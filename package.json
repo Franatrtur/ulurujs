@@ -1,9 +1,11 @@
 {
   "name": "uluru-crypto",
-  "version": "3.4.1",
+  "version": "4.0.0",
   "description": "a lightweight cryptographic library designed to be simple to use",
-  "main": "uluru.js",
-  "type": "commonjs",
+  "main": "./lib/index.js",
+  "type": "module",
+  "unpkg": "./dist/uluru-browser.min.js",
+  "browser": "./dist/uluru-browser.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/Franatrtur/ulurujs.git"
@@ -15,16 +17,22 @@
     "test": "test"
   },
   "files": [
-    "uluru.js",
-    "uluru.d.ts",
-    "test/",
-    "build/minify-main.js"
+    "./lib/",
+    "./dist/"
   ],
   "scripts": {
     "test": "node --trace-uncaught test/test",
-    "build": "tsc",
-    "compress": "node build/minify-main",
-    "bench": "node test/benchmarks"
+    "build": "run-s build:**",
+    "build:node": "run-s build-node:**",
+    "build-node:1prepare": "node build/node.js",
+    "build-node:2compile": "tsc",
+    "build:browser": "run-s build-browser:**",
+    "build-browser:1prepare": "node build/browser.js",
+    "build-browser:2build": "rollup -c rollup.config.js",
+    "build-browser:3declare": "tsc --project \"./tsconfig-declare.json\"",
+    "build:default-placeholders": "node build/default.js",
+    "bench": "node test/benchmarks",
+    "prepare": "npm run build"
   },
   "keywords": [
     "encryption",
@@ -38,6 +46,15 @@
   "author": "Franatrtur",
   "license": "MIT",
   "devDependencies": {
-    "terser": "^5.10.0"
+    "@rollup/plugin-commonjs": "^21.0.2",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^13.1.3",
+    "@rollup/plugin-typescript": "^8.3.1",
+    "npm-run-all": "^4.1.5",
+    "rollup": "^2.70.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "terser": "^5.10.0",
+    "tslib": "^2.3.1",
+    "typescript": "^4.6.2"
   }
 }

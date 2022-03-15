@@ -2,13 +2,13 @@
 
 	"compilerOptions" : {
 
-		"outDir": "lib/",
+		"outDir": "dist/",
 
 		"target": "ES6",
 
 		"lib": ["ES6", "DOM", "ESNext"],
 
-		"sourceMap" : false,
+		"sourceMap" : true,
 
 		"removeComments": false,
 
@@ -26,7 +26,7 @@
 
 	"exclude": [
 
-		"src/index-browser.ts"
+		"src/index.ts"
 
 	],
 

@@ -2,17 +2,17 @@
 
 	"compilerOptions" : {
 
-		"outDir": "lib/",
+		"outFile": "dist/uluru-browser.d.ts",
 
 		"target": "ES6",
 
 		"lib": ["ES6", "DOM", "ESNext"],
 
-		"sourceMap" : false,
-
-		"removeComments": false,
+		"allowJs" : true,
 
 		"declaration": true,
+
+		"emitDeclarationOnly": true,
 
 		"watch": false
 
@@ -20,14 +20,8 @@
 
 	"include": [
 
-		"src/"
+		"src/index.ts"
 
-	],
-
-	"exclude": [
-
-		"src/index-browser.ts"
-
-	],
+	]
 
 }

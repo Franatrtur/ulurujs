@@ -1,13 +1,13 @@
 
-var Uluru = Uluru || require("../uluru")
-var {performance} = typeof performance == "object" ? {performance} : require('perf_hooks')
+import Uluru from "../lib/index.js"
+import {performance} from 'perf_hooks'
 
 
 let ERRORS = []
 
 ;(function(){
 
-let nrun = 0
+let Nrun = 0
 
 const Colors = {
 	red: "\x1b[31m",
@@ -17,7 +17,7 @@ const Colors = {
 
 function Run(name, trial, ...args){
 
-	nrun++
+	Nrun++
 
 	let t0 = performance.now()
 	let success = true
@@ -34,14 +34,14 @@ function Run(name, trial, ...args){
 		success = false
 		err = e
 
-		ERRORS[nrun] = err
+		ERRORS[Nrun] = err
 
 	}
 
 	let t1 = performance.now()
 
 	console.log(
-		`${nrun}) ${success ? Colors.green : Colors.red}${name}${Colors.end} ${success ? "✔️" : "❌"} (${(t1 - t0).toFixed(2)}ms)`
+		`${Nrun}) ${success ? Colors.green : Colors.red}${name}${Colors.end} ${success ? "✓" : "✗"} (${(t1 - t0).toFixed(2)}ms)`
 		+ (success ? "" : `\n${err.toString()}`)
 	)
 
@@ -78,7 +78,7 @@ Run("Ascii encoding", () => {
 		}
 	]
 
-	return encodingTester(new Uluru.enc.Ascii(), streams)
+	return encodingTester(new Uluru.Ascii(), streams)
 
 })
 
@@ -91,7 +91,7 @@ Run("Base64 encoding", () => {
 		}
 	]
 
-	return encodingTester(new Uluru.enc.Base64(), streams)
+	return encodingTester(new Uluru.Base64(), streams)
 
 })
 
@@ -104,7 +104,7 @@ Run("Hex encoding", () => {
 		}
 	]
 
-	return encodingTester(new Uluru.enc.Hex(), streams)
+	return encodingTester(new Uluru.Hex(), streams)
 
 })
 
@@ -124,7 +124,7 @@ Run("Utf8 encoding", () => {
 		}
 	]
 
-	return encodingTester(new Uluru.enc.Utf8(), streams)
+	return encodingTester(new Uluru.Utf8(), streams)
 
 })
 

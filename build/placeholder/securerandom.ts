@@ -1,0 +1,1 @@
+export declare let fillRandom: (data: ArrayBufferView) => ArrayBufferView

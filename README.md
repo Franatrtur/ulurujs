@@ -1,24 +1,37 @@
 ﻿
 <img src="https://i.ibb.co/p1K4cDf/final.png" alt="drawing" height="80"/><br>
-Uluru crypto - a self-containted universal cryptolibrary designed with simplicity of usage in mind.
-# Uluru in javascript
-![GitHub](https://img.shields.io/github/license/Franatrtur/ulurujs?style=for-the-badge)  ![npm](https://img.shields.io/npm/v/uluru-crypto?label=npm%20version&style=for-the-badge) ![npm bundle size](https://img.shields.io/bundlephobia/min/uluru-crypto?style=for-the-badge)
+Uluru crypto - a self-containted universal cryptographic library designed with simplicity of usage in mind.
 
-Uluru JS is written in [typescript](https://www.typescriptlang.org/), but compiled to a single javascript file, and can be used both in node and browser without any external dependencies.
+# Uluru crypto in javascript
+![GitHub](https://img.shields.io/github/license/Franatrtur/ulurujs?style=for-the-badge)  ![npm version](https://img.shields.io/npm/v/uluru-crypto?label=npm%20version&style=for-the-badge) ![npm bundle size](https://img.shields.io/bundlephobia/min/uluru-crypto?style=for-the-badge)
+
+Uluru JS is written in [typescript](https://www.typescriptlang.org/) and compiled to javascript to be used in both nodeJS and the web, without any dependencies whatsoever. The uluru crypto implementation takes advantage of modern javascript features (e.g. typed arrays) for better performance.
 ## Quick start
+Node:
 ```bash
 $ npm install uluru-crypto
 ```
-```html
-<script src="https://cdn.jsdelivr.net/npm/uluru-crypto/uluru.js"></script>
-```
 ```javascript
-//in node use require("uluru-crypto"), in browser use the ready Uluru object:
-const {encrypt, decrypt, hash} = Uluru
+import { encrypt, decrypt, hash } from "uluru-crypto"
 let encrypted = encrypt("some sensitive data!", "secret password")
 let decrypted = decrypt(encrypted, "secret password") //"some sensitive data!"
 let checksum = hash("some string to hash") //"00d5c7aff4b3f0c...
 ```
+Browser:
+```html
+<script src="https://unpkg.com/uluru-crypto"></script>
+<script>
+	//in browser use the ready Uluru object:
+	const { encrypt, decrypt, hash } = Uluru
+</script>
+```
+
+
+
+
+
+
+
 # Docs
 ## Table of contents
  1. [Including Uluru in your project](#including-uluru-in-your-project)
@@ -38,51 +51,44 @@ let checksum = hash("some string to hash") //"00d5c7aff4b3f0c...
  9. [Keyed-hash authentication (HMAC)](#keyed-hash-authentication-hmac)
 ## Including Uluru in your project
 ### Node
-Installation with npm
+Installation with [npm](https://npmjs.com) for [NodeJS](https://nodejs.org):
 ```bash
 $ npm install uluru-crypto
 ```
-Usage in node
+You are all set to use uluru in your own project:
 ```javascript
-//require the exported object
-const Uluru = require("uluru-crypto")
-//using ESM import
+//default import is an object like in the browser
 import Uluru from "uluru-crypto"
-
-//or require specific functionalities that are needed
-const {ChaCha20, Keccak800} = require("uluru-crypto")
-//using ESM import
-import Uluru from "uluru-crypto"
-const {ChaCha20, Keccak800} = Uluru
+//or only import specific features
+import { Keccak800, ChaCha20 } from "uluru-crypto"
 ```
-Type declarations are present as well, located in the uluru.d.ts file.
+Type declarations are present as well, for all compiled files.
 ### Browser
-This will create a `Uluru` object in the global scope that can be used right away:
+Uluru can also be used in any modern browser supporting ES6.
 ```html
-<!--using jsderlivr to get the entry point of the npm package of the latest version-->
-<script src="https://cdn.jsdelivr.net/npm/uluru-crypto/uluru.js"></script>
-
-<!--automatically minified alternative-->
-<script src="https://cdn.jsdelivr.net/npm/uluru-crypto/uluru.min.js"></script>
+<!--The default is the minified browser file for convenience-->
+<script src="https://unpkg.com/uluru-crypto"></script>
+<!--The not-minified version-->
+<script src="https://unpkg.com/uluru-crypto/dist/uluru-browser.js"></script>
+<!--The ESM version-->
+<script src="https://unpkg.com/uluru-crypto/dist/uluru-browser.mjs"></script>
+<!--or using jsdelivr-->
+<script src="https://cdn.jsdelivr.net/npm/uluru-crypto/dist/uluru-browser.js"></script>
+<!--type definitions and source map files for browsers are also in the /dist folder-->
 ```
 Also compatible with the AMD [requireJS](https://requirejs.org/):
 ```javascript
-require("Uluru", (Uluru) => { /*...*/ })
+require("Uluru", Uluru => { /*...your code goes here...*/ })
 ```
 ### Custom compilation
-If you wish to modify the source code (`./src/`) or the compilation options (`./tsconfig.json`):
+If you wish to modify the source code `/src` or the compilation options `./tsconfig.json`:
 ```bash
 #clone the repository
 $ git clone https://github.com/Franatrtur/ulurujs
-#compile the typescript code, you can modify tsconfig.json beforehand
+#compile typescript and bundle for browser
 $ npm run build
-
-#to create minified uluru.min.js, !requires terser
-$ npm run compress
 #testing, for tests in browser open /test/test.html
 $ npm run test
-#benchmarks and performance tests
-$ npm run bench
 ```
 ## String encodings
 Uluru crypto implements the following encodings, working in all environments:
@@ -94,20 +100,19 @@ Uluru crypto implements the following encodings, working in all environments:
 Uluru uses fast native functions. If they are not present, a polyfill will be used instead (under the hood).
 ```typescript
 //pseudo typescript code
-Uluru.enc.encoding{
+interface encoding {
 	encode: (str: string) => Uint8Array,
 	decode: (bytes: ArrayBufferView) => string
 }
-Uluru.enc{Ascii, Utf8, Hex, Base64} implements Uluru.enc.encoding 
+class Ascii, Utf8, Hex, Base64 implements encoding 
 ```
 Example usages:
 ```javascript
-const utf8 = new Uluru.enc.Utf8() //init an encoder
-let binaryData = utf8.encode("a utf8 string 🤩Ξ↝") //returns a uint8array
-let stringAgain = utf8.decode(binaryData) //returns "a utf8 string 🤩Ξ↝"
+const utf8 = new Uluru.Utf8() //init an encoder
+let binaryData = utf8.encode("a unicode string 🤩Ξ↝") //returns a uint8array
+let stringAgain = utf8.decode(binaryData) //returns "a unicode string 🤩Ξ↝"
 //or create an anonoymous encoder
-binaryData = new Uluru.enc.Hex().encode("0f5e6a2669") //returns a uint8array
-stringAgain = new Uluru.enc.Hex().decode(binaryData) //returns "0f5e6a2669"
+stringAgain = new Uluru.Hex().decode(binaryData) //returns a hex string "612075...
 ```
 ## Hashing
 Uluru crypto implements the [Keccak algorithm](https://keccak.team/) (the winner of the [SHA3](https://en.wikipedia.org/wiki/SHA-3) contest) in the variant Keccak800. This version, using 32bit words so that it works fast in javascript, is very secure. (s = 800, r = 512, c = 288).  
@@ -132,13 +137,15 @@ Example usage:
 ```javascript
 let hasher = new Uluru.Keccak800() //init the hash process
 hasher.update(some_data).update(more_data) //process data
-let checksum = hasher.finalize(64) //get 64 bytes of the hash
+let checksum = hasher.finalize(64) //get some amount of bytes of the hash
 ```
 ## Symmetric encryption
 Uluru crypto implements the [Chacha cipher](https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant), which is a very secure symmetric stream cipher. In addition, during the encryption and decryption process, a 128bit [MAC](https://en.wikipedia.org/wiki/Message_authentication_code) is computed to verify the integrity of the message. This ensures the encrypted data was not mangled with in any way.  The whole process is symmetric so encryption and decryption are performed in the same way.  
 
 Uluru also exposes safe simplified functions for encryption if you aren't comfortable with working with raw data and binary operations. You can simply pass in a message and a password:
 ```javascript
+//you can encrypt complex javascript objects:
+//just use JSON.stringify before encryption (and JSON.parse after decryption)
 let plaintext = "very sensitive data", password = "my secret key"
 let encrypted = Uluru.encrypt(plaintext, password)
 try{
@@ -217,7 +224,7 @@ Uluru also provides a simplified function that returns the stringified keypair o
 //using the simplified function
 let keypairstring = Uluru.rsaGenerate()
 //the stringified keys are separated by "!"
-let publickeystr, privatekeystr = keypairstring.split("!")
+let [publickeystr, privatekeystr] = keypairstring.split("!")
 
 // using the basic class interface
 let keypair = Uluru.RSAKeyPair.generate(2560) //the bitlength can be specified
@@ -299,7 +306,7 @@ let randomBytes = rand.fill(new Uint8Array(69))
 let randomFraction = rand.word() / 0x100000000
 ```
 ## Keyed-hash authentication (HMAC)
-[HMAC](https://en.wikipedia.org/wiki/HMAC) (keyed-hash message authentication code) provides a secure way to authenticate a message, using a shared key (and potentially a salt). The key is combined with the message in such a way that the resulting checksum verifies that the message has not been changed/malformed. While the key remains secret, the checksum is sent along with the message. Uluru also provides a safe function for hmac-ing if you aren't comfortable with working with raw data and binary operations.
+[HMAC](https://en.wikipedia.org/wiki/HMAC) (keyed-hash message authentication code) provides a secure way to authenticate a message, using a shared key (and potentially a salt). The key is combined with the message in such a way that the resulting checksum verifies that the message has not been malformed or modified by an outside party. While the key remains secret, the checksum is sent along with the message. Uluru also provides a safe function for hmac-ing if you aren't comfortable with working with raw data and binary operations.
 > Note: uluru encryption already has a secure MACing system built into it!  
 > But using this HMAC is still useful when authenticating unencrypted data
 ```typescript

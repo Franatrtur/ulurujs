@@ -1,147 +1,149 @@
-namespace Uluru {
+import { ChaCha20, Keccak800, KDF, HMAC, Random, RSAKey, RSAKeyPair } from "./algo/algo.js"
+import { Hex, Utf8, Base64 } from "./enc/enc.js"
 
-	//functions for simplified user interaction
-	//using pbkdf with 1000 iterations to slow down the key generation
+//functions for simplified user interface
 
-	const SALTsize = 8
+const SALTsize = 8
 
-	export function encrypt(plaintext: any, password: string){
+export function encrypt(plaintext: string, password: string){
 
-		let salt = new Random().fill(new Uint8Array(SALTsize))
+	let salt = new Random().bytes(SALTsize)
 
-		let key = new PBKDF(32, 1000).compute(new enc.Utf8().encode(password), salt)
+	let key = new KDF(32, 1000).compute(new Utf8().encode(password), salt)
 
-		let encryptor = new ChaCha20(key, true, salt)
+	let encryptor = new ChaCha20(key, true, salt)
 
-		encryptor.update(new enc.Utf8().encode(plaintext))
+	encryptor.update(new Utf8().encode(plaintext))
 
-		let encrypted = encryptor.finalize()
+	let encrypted = encryptor.finalize()
 
-		return  new enc.Hex().decode(salt) +
-				new enc.Base64().decode(encrypted.data) +
-				new enc.Hex().decode(encrypted.mac as Uint8Array)
-	}
+	return  new Hex().decode(salt) +
+			new Base64().decode(encrypted.data) +
+			new Hex().decode(encrypted.mac as Uint8Array)
+}
 
-	export function decrypt(ciphertext: string, password: string): any{
+export function decrypt(ciphertext: string, password: string){
 
-		let salt, cdata, mac
+	let salt, cdata, mac
 
-		try{
+	try{
 
-			salt = new enc.Hex().encode(ciphertext.slice(0, SALTsize * 2))
-			cdata = new enc.Base64().encode(ciphertext.slice(SALTsize * 2, -32))
-			mac = new enc.Hex().encode(ciphertext.slice(-32))
-			
-		}
-		catch(e){
-			throw "Incorrectly formated ciphertext"
-		}
-
-		let key = new PBKDF(32, 1000).compute(new enc.Utf8().encode(password), salt)
-
-		let decryptor = new ChaCha20(key, true, salt)
-
-		decryptor.update(cdata)
-
-		let decrypted = decryptor.finalize()
-
-		if(!decryptor.verify(mac))
-			throw "Invalid authentication"
-
-		return new enc.Utf8().decode(decrypted.data)
-
-	}
-
-	export function hash(text){
-
-		return new enc.Hex().decode(new Keccak800().update(new enc.Utf8().encode(text)).finalize())
-
-	}
-
-	export function rsaGenerate(){
-
-		return RSAKeyPair.generate(3072).toString()
-
-	}
-
-	export function rsaSign(message, privkeystr){
-
-		return new enc.Base64().decode(
-			RSAKey.fromString(privkeystr).sign(
-				new enc.Utf8().encode(message)
-			)
-		)
-
-	}
-
-	export function rsaVerify(message, signature, pubkeystr){
-
-		return RSAKey.fromString(pubkeystr).verify(
-			new enc.Utf8().encode(message),
-			new enc.Base64().encode(signature)
-		)
-
-	}
-
-	export function rsaEncrypt(message, pubkeystr){
-
-		let key = RSAKey.fromString(pubkeystr)
-
-		let symkey = new Random().fill(new Uint8Array(32))
-
-		let encsymkey = new enc.Base64().decode(
-			key.encrypt(symkey)
-		)
-
-		let encryptor = new ChaCha20(symkey, true)
-
-		encryptor.update(new enc.Utf8().encode(message))
-
-		let encptx = encryptor.finalize()
-
-		return encsymkey + "|" + new enc.Base64().decode(encptx.data) + new enc.Hex().decode(encptx.mac as Uint8Array)
-
-	}
-
-	export function rsaDecrypt(message, privkeystr){
-
-		let key: RSAKey, symkey, encptx, mac, splitted
-
-		try{
-
-			key = RSAKey.fromString(privkeystr)
-
-			splitted = message.split("|")
-			symkey = new enc.Base64().encode(splitted[0])
-
-			encptx = new enc.Base64().encode(splitted[1].slice(0, -32))
-			mac = new enc.Hex().encode(splitted[1].slice(-32))
-
-		}
-		catch(e){
-			throw "Incorrectly formatted RSA ciphertext"
-		}
-
-		symkey = key.decrypt(symkey)
-		let decryptor = new ChaCha20(symkey, true)
+		salt = new Hex().encode(ciphertext.slice(0, SALTsize * 2))
+		cdata = new Base64().encode(ciphertext.slice(SALTsize * 2, -32))
+		mac = new Hex().encode(ciphertext.slice(-32))
 		
-		encptx = decryptor.update(encptx).finalize()
-
-		if(!decryptor.verify(mac))
-			throw "Invalid RSA message authentication code"
-
-		return new enc.Utf8().decode(encptx.data)
-
+	}
+	catch(e){
+		throw "Incorrectly formated ciphertext"
 	}
 
-	export function hmac(message, password){
+	let key = new KDF(32, 1000).compute(new Utf8().encode(password), salt)
 
-		return new Uluru.enc.Hex().decode(
-			new Uluru.HMAC(
-				new PBKDF().compute(password)
-			).update(message).finalize(16)
+	let decryptor = new ChaCha20(key, true, salt)
+
+	decryptor.update(cdata)
+
+	let decrypted = decryptor.finalize()
+
+	if(!decryptor.verify(mac))
+		throw "Invalid authentication"
+
+	return new Utf8().decode(decrypted.data)
+
+}
+
+export function hash(text){
+
+	return new Hex().decode(
+		new Keccak800().update(
+			new Utf8().encode(text)
+		).finalize()
+	)
+
+}
+
+export function rsaGenerate(){
+
+	return RSAKeyPair.generate(3072).toString()
+
+}
+
+export function rsaSign(message, privkeystr){
+
+	return new Base64().decode(
+		RSAKey.fromString(privkeystr).sign(
+			new Utf8().encode(message)
 		)
+	)
+
+}
+
+export function rsaVerify(message, signature, pubkeystr){
+
+	return RSAKey.fromString(pubkeystr).verify(
+		new Utf8().encode(message),
+		new Base64().encode(signature)
+	)
+
+}
+
+export function rsaEncrypt(message, pubkeystr){
+
+	let key = RSAKey.fromString(pubkeystr)
+
+	let symkey = new Random().bytes(32)
+
+	let encsymkey = new Base64().decode(
+		key.encrypt(symkey)
+	)
+
+	let encryptor = new ChaCha20(symkey, true)
+
+	encryptor.update(new Utf8().encode(message))
+
+	let encptx = encryptor.finalize()
+
+	return encsymkey + "|" + new Base64().decode(encptx.data) + new Hex().decode(encptx.mac as Uint8Array)
+
+}
+
+export function rsaDecrypt(message, privkeystr){
+
+	let key: RSAKey, symkey, encptx, mac, splitted
+
+	try{
+
+		key = RSAKey.fromString(privkeystr)
+
+		splitted = message.split("|")
+		symkey = new Base64().encode(splitted[0])
+
+		encptx = new Base64().encode(splitted[1].slice(0, -32))
+		mac = new Hex().encode(splitted[1].slice(-32))
 
 	}
+	catch(e){
+		throw "Incorrectly formatted RSA ciphertext"
+	}
+
+	symkey = key.decrypt(symkey)
+	let decryptor = new ChaCha20(symkey, true)
+	
+	encptx = decryptor.update(encptx).finalize()
+
+	if(!decryptor.verify(mac))
+		throw "Invalid RSA message authentication code"
+
+	return new Utf8().decode(encptx.data)
+
+}
+
+export function hmac(message, password){
+
+	return new Hex().decode(
+		new HMAC(
+			new KDF().compute(password)
+		).update(message).finalize(16)
+	)
 
 }
