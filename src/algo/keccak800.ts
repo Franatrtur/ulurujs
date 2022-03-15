@@ -11,7 +11,7 @@ const RHOoffsets = new Uint8Array([
 	18,  2, 29, 24, 14
 ])
 
-const RCs = new Uint32Array([
+const RoundConsts = new Uint32Array([
 	0x00000001, 0x00008082, 0x0000808a, 0x80008000, 0x0000808b, 0x80000001, 0x80008081, 0x00008009,
 	0x0000008a, 0x00000088, 0x80008009, 0x8000000a, 0x8000808b, 0x0000008b, 0x00008089, 0x00008003,
 	0x00008002, 0x00000080, 0x0000800a, 0x8000000a, 0x80008081, 0x00008080, 0x80000001, 0x80008008
@@ -125,7 +125,7 @@ export default class Keccak800 implements algorithm {
 				state[i] = tempState[i] ^ (~tempState[XP1[i]] & tempState[XP2[i]])
 
 			//iota step
-			state[0] ^= RCs[round]
+			state[0] ^= RoundConsts[round]
 
 		}
 
@@ -161,7 +161,7 @@ export default class Keccak800 implements algorithm {
 		data = typeof data == "string" ? new Utf8().encode(data as string) : data
 
 		//shortcuts for the minifier
-		let padBlock: any = this.padBlock
+		let padBlock: Uint32Array | Uint8Array = this.padBlock
 		let padSigBytes = this.padSigBytes
 
 		//create an incomplete block

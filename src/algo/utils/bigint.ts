@@ -8,7 +8,7 @@ const n0 = Bi(0)
 
 export const mask = bitlen => (n1 << Bi(bitlen)) - n1
 
-export function bitLen(x: bigint){
+export function bitLength(x: bigint){
 	
 	let bits = 0 //means that for 0 the Number of bits is also 0
 	let bits32 = Bi(0x100000000)
@@ -72,9 +72,9 @@ small: for(let n = 3; n < 1024; n += 2){
 }
 
 
-export function fermat(prime: bigint, iterations = 6){
+export function fermatTest(prime: bigint, iterations = 6){
 
-	let randsize = Math.min(16, bitLen(prime) - 1)
+	let randsize = Math.min(16, bitLength(prime) - 1)
 	let base
 
 	while(iterations--){
@@ -89,10 +89,10 @@ export function fermat(prime: bigint, iterations = 6){
 	return true
 }
 
-export function millerRabin(prime: bigint, iterations = 6){
+export function millerRabinTest(prime: bigint, iterations = 6){
 
 	let s = n0, d = prime - n1
-	let randsize = Math.min(16, bitLen(prime) - 1)
+	let randsize = Math.min(16, bitLength(prime) - 1)
 
 	while(!((d & n1) != n1)){
 
@@ -138,7 +138,7 @@ export function isPrime(prime: bigint, iterations = 6){
 		if(prime % smallprimes[i] == n0)
 			return prime == smallprimes[i]
 
-	return millerRabin(prime, iterations) && fermat(prime, iterations)
+	return millerRabinTest(prime, iterations) && fermatTest(prime, iterations)
 
 }
 

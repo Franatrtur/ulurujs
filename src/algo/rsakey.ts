@@ -2,7 +2,7 @@ import Base64 from "../enc/base64.js"
 import Utf8 from "../enc/utf8.js"
 import Keccak800 from "./keccak800.js"
 import OAEP from "./oaep.js"
-import { Bi, buffviewToBi, biToBuffview, bitLen, modPow } from "./utils/bigint.js"
+import { Bi, buffviewToBi, biToBuffview, bitLength, modPow } from "./utils/bigint.js"
 
 export default class RSAKey {
 
@@ -55,7 +55,7 @@ export default class RSAKey {
 
 		data = typeof data == "string" ? new Utf8().encode(data as string) : data
 
-		let msglen = (bitLen(this.M) >> 3) - 2 - OAEP.headerLength
+		let msglen = (bitLength(this.M) >> 3) - 2 - OAEP.headerLength
 
 		if(data.byteLength > msglen)
 			throw new Error("Message too long")
