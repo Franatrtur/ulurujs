@@ -39,13 +39,11 @@ export default [
 				file: 'dist/uluru-browser.js',
 				format: 'umd',
 				name,
-				sourcemap: true,
 			},
 			{
 				file: 'dist/uluru-browser.min.js',
 				format: 'umd',
 				name,
-				sourcemap: true,
 				plugins: [
 					//minify
 					terser(),
@@ -78,7 +76,6 @@ export default [
 			{
 				file: 'dist/uluru-browser.mjs',
 				format: 'es',
-				sourcemap: true,
 			}
 		]
 	}

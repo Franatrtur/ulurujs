@@ -8,7 +8,7 @@
 
 		"lib": ["ES6", "DOM", "ESNext"],
 
-		"sourceMap" : true,
+		"sourceMap" : false,
 
 		"removeComments": false,
 
