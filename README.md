@@ -10,7 +10,9 @@ Uluru JS is written in [typescript](https://www.typescriptlang.org/) and compile
 Features:
  - symmetric encryption with ChaCha20
  - hashing, PBKDF and HMAC with Keccak800
- - RSA and diffie hellman key exchange
+ - RSA (asymmetric encryption, signing, key generation) and diffie hellman key exchange
+ - character encodings (Utf8, Ascii, Base64, Hex)
+ - secure generation of random bytes
 ## Quick start
 Node:
 ```bash
