@@ -1,1 +1,0 @@
-Uluru crypto will soon be accepting bug reports and pull requests!
