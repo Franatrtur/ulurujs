@@ -33,7 +33,7 @@ export default {
 
 	output: [
 		{
-			file: 'dist/uluru-esm.js',
+			file: 'dist/uluru-esm.mjs',
 			format: 'es',
 			name,
 		}

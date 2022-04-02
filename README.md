@@ -19,7 +19,9 @@ Node:
 $ npm install uluru-crypto
 ```
 ```javascript
-import { encrypt, decrypt, hash } from "uluru-crypto"
+import { encrypt, decrypt, hash } from "uluru-crypto" //ES modules
+const { encrypt, decrypt, hash } = require("uluru-crypto") //common js
+
 let encrypted = encrypt("some sensitive data!", "secret password")
 let decrypted = decrypt(encrypted, "secret password") //"some sensitive data!"
 let checksum = hash("some string to hash") //"00d5c7aff4b3f0c...
