@@ -1,4 +1,4 @@
-import Keccak800 from "./keccak800.js"
+import Keccak800 from "./keccak800"
 
 /**
  * Custom key derivation function.

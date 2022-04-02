@@ -1,5 +1,5 @@
-import Hex from "../../enc/hex.js"
-import Random from "../random.js"
+import Hex from "../../enc/hex"
+import Random from "../random"
 
 export const Bi = BigInt
 

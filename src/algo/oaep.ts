@@ -1,6 +1,6 @@
-import Keccak800 from "./keccak800.js"
-import Random from "./random.js"
-import { mergeBuffers } from "./utils/buffers.js"
+import Keccak800 from "./keccak800"
+import Random from "./random"
+import { mergeBuffers } from "./utils/buffers"
 
 const SEEDlen = 12
 const HASHlen = 16

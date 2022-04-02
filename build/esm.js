@@ -6,10 +6,10 @@ let fileList = JSON.parse(fileContents)
 
 const fixSlashes = pth => pth.split("/").join("\\")
 
-const warningNotice = "//PLACEHOLDER, see build/"
+const warningNotice = "//ESM VERSION, see build/"
 const destDir = __dirname + "\\..\\src\\"
 
-const buildDir = __dirname + "\\placeholder\\"
+const buildDir = __dirname + "\\esm\\"
 
 for(let file of fileList){
 
@@ -19,7 +19,8 @@ for(let file of fileList){
 
 }
 
-console.log("written default build placeholders")
+console.log("written esm build placeholders")
+
 
 /*
 
@@ -36,10 +37,10 @@ let fileList = JSON.parse(fileContents)
 
 const fixSlashes = pth => pth.split("/").join("\\")
 
-const warningNotice = "//PLACEHOLDER, see build/"
+const warningNotice = "//NODE VERSION, see build/"
 const destDir = __dirname + "..\\src\\"
 
-const buildDir = __dirname + ".\\placeholder\\"
+const buildDir = __dirname + ".\\node\\"
 
 for(let file of fileList){
 
@@ -49,6 +50,6 @@ for(let file of fileList){
 
 }
 
-console.log("written default placeholders")
+console.log("written node build placeholders")
 
 */

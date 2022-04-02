@@ -1,8 +1,8 @@
-import Base64 from "../enc/base64.js"
-import Utf8 from "../enc/utf8.js"
-import Keccak800 from "./keccak800.js"
-import OAEP from "./oaep.js"
-import { Bi, buffviewToBi, biToBuffview, bitLength, modPow } from "./utils/bigint.js"
+import Base64 from "../enc/base64"
+import Utf8 from "../enc/utf8"
+import Keccak800 from "./keccak800"
+import OAEP from "./oaep"
+import { Bi, buffviewToBi, biToBuffview, bitLength, modPow } from "./utils/bigint"
 
 export default class RSAKey {
 

@@ -1,4 +1,4 @@
-import { fillRandom } from "./utils/securerandom.js"
+import { fillRandom } from "./utils/securerandom"
 
 const CAPACITY = 16300 //max is 65536 bytes -> 16thousand 32bit words
 const SECURE = typeof fillRandom == "function" //prefer safe randomness from crypto/webcrypto

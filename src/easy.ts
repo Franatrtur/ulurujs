@@ -1,5 +1,5 @@
-import { ChaCha20, Keccak800, KDF, HMAC, Random, RSAKey, RSAKeyPair } from "./algo/algo.js"
-import { Hex, Utf8, Base64 } from "./enc/enc.js"
+import { ChaCha20, Keccak800, KDF, HMAC, Random, RSAKey, RSAKeyPair } from "./algo/algo"
+import { Hex, Utf8, Base64 } from "./enc/enc"
 
 //functions for simplified user interface
 
@@ -52,7 +52,7 @@ export function decrypt(ciphertext: string, password: string){
 
 }
 
-export function hash(text){
+export function hash(text: string){
 
 	return new Hex().decode(
 		new Keccak800().update(
@@ -68,7 +68,7 @@ export function rsaGenerate(){
 
 }
 
-export function rsaSign(message, privkeystr){
+export function rsaSign(message: string, privkeystr: string){
 
 	return new Base64().decode(
 		RSAKey.fromString(privkeystr).sign(
@@ -78,7 +78,7 @@ export function rsaSign(message, privkeystr){
 
 }
 
-export function rsaVerify(message, signature, pubkeystr){
+export function rsaVerify(message: string, signature: string, pubkeystr: string){
 
 	return RSAKey.fromString(pubkeystr).verify(
 		new Utf8().encode(message),
@@ -87,7 +87,7 @@ export function rsaVerify(message, signature, pubkeystr){
 
 }
 
-export function rsaEncrypt(message, pubkeystr){
+export function rsaEncrypt(message: string, pubkeystr: string){
 
 	let key = RSAKey.fromString(pubkeystr)
 
@@ -107,7 +107,7 @@ export function rsaEncrypt(message, pubkeystr){
 
 }
 
-export function rsaDecrypt(message, privkeystr){
+export function rsaDecrypt(message: string, privkeystr: string){
 
 	let key: RSAKey, symkey, encptx, mac, splitted
 
@@ -138,7 +138,7 @@ export function rsaDecrypt(message, privkeystr){
 
 }
 
-export function hmac(message, password){
+export function hmac(message: string, password: string){
 
 	return new Hex().decode(
 		new HMAC(

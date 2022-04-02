@@ -1,6 +1,7 @@
 
-import Uluru from "../lib/index.js"
-import {performance} from 'perf_hooks'
+var Uluru = Uluru || require("../dist/uluru-umd")
+if(typeof performance != "object")
+	var {performance} = require("perf_hooks")
 
 
 let ERRORS = []

@@ -1,11 +1,14 @@
 {
   "name": "uluru-crypto",
-  "version": "4.0.5",
+  "version": "4.1.0",
   "description": "a lightweight cryptographic library designed to be simple to use",
-  "main": "./lib/index.js",
-  "type": "module",
-  "unpkg": "./dist/uluru-browser.min.js",
-  "browser": "./dist/uluru-browser.js",
+  "main": "./dist/uluru-esm.js",
+  "exports": {
+    "require": "./dist/uluru-esm.js",
+    "import": "./dist/uluru-umd.js"
+  },
+  "unpkg": "./dist/uluru-umd.min.js",
+  "browser": "./dist/uluru-umd.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/Franatrtur/ulurujs.git"
@@ -17,20 +20,23 @@
     "test": "test"
   },
   "files": [
-    "lib",
     "dist"
   ],
   "scripts": {
     "test": "node --trace-uncaught test/test",
     "build": "run-s build:**",
-    "build:node": "run-s build-node:**",
-    "build-node:1prepare": "node build/node.js",
-    "build-node:2compile": "tsc",
-    "build:browser": "run-s build-browser:**",
-    "build-browser:1prepare": "node build/browser.js",
-    "build-browser:2build": "rollup -c rollup.config.js",
-    "build-browser:3declare": "tsc --project \"./tsconfig-declare.json\"",
-    "build:default-placeholders": "node build/default.js",
+
+    "build:esm": "run-s build-esm:**",
+    "build-esm:prepare": "node build/esm.js",
+    "build-esm:build": "rollup --config rollup.esm.js",
+    "build-esm:declare": "tsc --declaration --emitDeclarationOnly --outFile \"dist/uluru-esm.d.ts\"",
+
+    "build:umd": "run-s build-umd:**",
+    "build-umd:prepare": "node build/umd.js",
+    "build-umd:build": "rollup --config rollup.umd.js",
+
+    "build:placeholders": "node build/default.js",
+
     "bench": "node test/benchmarks",
     "prepare": "npm run build"
   },

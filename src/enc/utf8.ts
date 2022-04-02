@@ -1,4 +1,4 @@
-import encoding from "./encoding.js"
+import encoding from "./encoding"
 
 export default class Utf8 implements encoding {
 

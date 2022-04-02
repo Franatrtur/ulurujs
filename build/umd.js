@@ -6,10 +6,10 @@ let fileList = JSON.parse(fileContents)
 
 const fixSlashes = pth => pth.split("/").join("\\")
 
-const warningNotice = "//PLACEHOLDER, see build/"
+const warningNotice = "//UMD VERSION, see build/"
 const destDir = __dirname + "\\..\\src\\"
 
-const buildDir = __dirname + "\\placeholder\\"
+const buildDir = __dirname + "\\umd\\"
 
 for(let file of fileList){
 
@@ -19,7 +19,7 @@ for(let file of fileList){
 
 }
 
-console.log("written default build placeholders")
+console.log("written umd build placeholders")
 
 /*
 
@@ -36,10 +36,10 @@ let fileList = JSON.parse(fileContents)
 
 const fixSlashes = pth => pth.split("/").join("\\")
 
-const warningNotice = "//PLACEHOLDER, see build/"
+const warningNotice = "//BROWSER VERSION, see build/"
 const destDir = __dirname + "..\\src\\"
 
-const buildDir = __dirname + ".\\placeholder\\"
+const buildDir = __dirname + ".\\browser\\"
 
 for(let file of fileList){
 
@@ -49,6 +49,6 @@ for(let file of fileList){
 
 }
 
-console.log("written default placeholders")
+console.log("written browser build placeholders")
 
 */
