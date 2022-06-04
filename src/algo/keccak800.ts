@@ -160,6 +160,9 @@ export default class Keccak800 implements algorithm {
 
 		data = typeof data == "string" ? new Utf8().encode(data as string) : data
 
+		if(data.byteLength < 1)
+			return
+
 		//shortcuts for the minifier
 		let padBlock: Uint32Array | Uint8Array = this.padBlock
 		let padSigBytes = this.padSigBytes

@@ -132,7 +132,7 @@ Run("Utf8 encoding", () => {
 
 Run("Ez Hash checksums (old)", () => {
 
-	return Uluru.hash("").startsWith("86a55d03") && Uluru.hash("A").startsWith("ad54ca3f") && Uluru.hash("_fillč".repeat(690)).startsWith("ad282344")
+	return Uluru.hash("").startsWith("f47a2c3a") && Uluru.hash("A").startsWith("ad54ca3f") && Uluru.hash("_fillč".repeat(690)).startsWith("ad282344")
 
 })
 Run("Keccak squeezing (old)", () => {

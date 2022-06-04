@@ -20,6 +20,7 @@ export function encrypt(plaintext: string, password: string){
 	return  new Hex().decode(salt) +
 			new Base64().decode(encrypted.data) +
 			new Hex().decode(encrypted.mac as Uint8Array)
+			
 }
 
 export function decrypt(ciphertext: string, password: string){
