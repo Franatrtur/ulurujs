@@ -6,9 +6,13 @@ export const Bi = BigInt
 const n1 = Bi(1)
 const n0 = Bi(0)
 
-export const mask = bitlen => (n1 << Bi(bitlen)) - n1
+export function mask(bitlen: number): bigint{
+	
+	return (n1 << Bi(bitlen)) - n1
 
-export function bitLength(x: bigint){
+}
+
+export function bitLength(x: bigint): number{
 	
 	let bits = 0 //means that for 0 the Number of bits is also 0
 	let bits32 = Bi(0x100000000)
@@ -28,7 +32,7 @@ export function bitLength(x: bigint){
 
 }
 
-export function modPow(base: bigint, exponent: bigint, modulus: bigint){
+export function modPow(base: bigint, exponent: bigint, modulus: bigint): bigint{
 
 	let result = n1
 
@@ -46,7 +50,7 @@ export function modPow(base: bigint, exponent: bigint, modulus: bigint){
 
 }
 
-export function randomBi(bitlength: number){
+export function randomBi(bitlength: number): bigint{
 
 	let result = n0
 	let rand = new Random()
@@ -72,7 +76,7 @@ small: for(let n = 3; n < 1024; n += 2){
 }
 
 
-export function fermatTest(prime: bigint, iterations = 6){
+export function fermatTest(prime: bigint, iterations: number = 6): boolean{
 
 	let randsize = Math.min(16, bitLength(prime) - 1)
 	let base
@@ -89,7 +93,7 @@ export function fermatTest(prime: bigint, iterations = 6){
 	return true
 }
 
-export function millerRabinTest(prime: bigint, iterations = 6){
+export function millerRabinTest(prime: bigint, iterations: number = 6): boolean{
 
 	let s = n0, d = prime - n1
 	let randsize = Math.min(16, bitLength(prime) - 1)
@@ -132,7 +136,7 @@ export function millerRabinTest(prime: bigint, iterations = 6){
 
 }
 
-export function isPrime(prime: bigint, iterations = 6){
+export function isPrime(prime: bigint, iterations: number = 6): boolean{
 
 	for(let i = 0, l = smallprimes.length; i < l; i++)
 		if(prime % smallprimes[i] == n0)
@@ -142,7 +146,7 @@ export function isPrime(prime: bigint, iterations = 6){
 
 }
 
-export function getPrime(bitlength, iterations = 6, attempts = 100000){
+export function getPrime(bitlength: number, iterations: number = 6, attempts: number = 100000): bigint{
 
 	let candidate
 
@@ -185,7 +189,7 @@ export function modInv(int: bigint, modulus: bigint): bigint{ //int != 1
 
 }
 
-export function buffviewToBi(bufferview: ArrayBufferView){
+export function buffviewToBi(bufferview: ArrayBufferView): bigint{
 
 	return Bi("0x" + new Hex().decode(
 		new Uint8Array(bufferview.buffer, bufferview.byteOffset || 0, bufferview.byteLength || 0)
@@ -193,7 +197,7 @@ export function buffviewToBi(bufferview: ArrayBufferView){
 
 }
 
-export function biToBuffview(bigint: bigint){
+export function biToBuffview(bigint: bigint): Uint8Array{
 
 	let stred = bigint.toString(16)
 	return new Hex().encode((stred.length % 2 == 1 ? "0" : "") + stred)

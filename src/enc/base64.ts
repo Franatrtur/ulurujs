@@ -12,7 +12,7 @@ for(let c = 0; c < 64; c++)
 
 export default class Base64 implements encoding {
 
-	encode(str: string){
+	encode(str: string): Uint8Array{
 
 		if(typeof atob == "function")
 			return new Ascii().encode(atob(str))
@@ -48,7 +48,7 @@ export default class Base64 implements encoding {
 		
 	}
 
-	decode(bytes: ArrayBufferView){
+	decode(bytes: ArrayBufferView): string{
 
 		let byteArr = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 

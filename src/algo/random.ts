@@ -8,7 +8,7 @@ const SECURE = typeof fillRandom == "function" //prefer safe randomness from cry
  * Remains hidden in the module scope.
  */
 const Pool = new Uint32Array(CAPACITY)
-let Pointer = 0
+let Pointer: number = 0
 
 /**
  * Once all the words in `Pool` (the random buffer) are used,
@@ -36,7 +36,7 @@ export default class Random {
 	public static capacity = CAPACITY
 	public static secure = SECURE
 
-	public word(){
+	public word(): number{
 
 		if(Pointer >= CAPACITY)
 			RESET()

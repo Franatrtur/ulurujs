@@ -13,7 +13,7 @@ for(let h = 0; h < 256; h++){
 
 export default class Hex implements encoding {
 
-	encode(str: string){
+	encode(str: string): Uint8Array{
 
 		str = str.replace(/[^A-Fa-f0-9\+\/]/g, "").toLowerCase()
 
@@ -26,7 +26,7 @@ export default class Hex implements encoding {
 
 	}
 
-	decode(bytes: ArrayBufferView){
+	decode(bytes: ArrayBufferView): string{
 
 		let byteArr = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 

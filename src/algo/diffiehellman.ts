@@ -33,19 +33,19 @@ export default class DiffieHellman {
 		
 	}
 
-	public send(){
+	public send(): Uint8Array{
 
 		return biToBuffview(modPow(GENERATOR, this.E, MODPgroup))
 
 	}
 
-	public receive(data){
+	public receive(data: ArrayBufferView){
 
 		this.secret = modPow(buffviewToBi(data), this.E, MODPgroup)
 
 	}
 
-	public finalize(length = 32){
+	public finalize(length: number = 32): Uint8Array{
 
 		if(typeof this.secret != "bigint")
 			throw new Error("Key exchange cannot finalize without receiving")

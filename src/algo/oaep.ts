@@ -16,7 +16,7 @@ export default class OAEP {
 	public static hashLength = HASHlen
 	public static headerLength = HDRlen
 
-	pad(data: ArrayBufferView, len: number = 128){
+	pad(data: ArrayBufferView, len: number = 128): Uint8Array{
 
 		if(len <= HDRlen)
 			throw new Error("OAEP message length too small")
@@ -42,7 +42,7 @@ export default class OAEP {
 
 	}
 
-	unpad(data: ArrayBufferView){
+	unpad(data: ArrayBufferView): Uint8Array{
 
 		let len = data.byteLength
 

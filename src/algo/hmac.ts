@@ -31,7 +31,7 @@ export default class HMAC implements algorithm {
 
 	}
 
-	public update(data: string | ArrayBufferView){
+	public update(data: string | ArrayBufferView): this{
 
 		this.hasher.update(data)
 
@@ -39,7 +39,7 @@ export default class HMAC implements algorithm {
 
 	}
 
-	public finalize(outputbytes?: number){
+	public finalize(outputbytes?: number): Uint8Array{
 
 		return new Keccak800().update(this.outerKey).update(
 			this.hasher.finalize(64)

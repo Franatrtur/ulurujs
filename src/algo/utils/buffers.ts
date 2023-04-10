@@ -1,5 +1,5 @@
 
-export function mergeBuffers(...bufferViews: ArrayBufferView[]){
+export function mergeBuffers(...bufferViews: ArrayBufferView[]): Uint8Array{
 
 	let len = 0
 	for(let i = 0; i < bufferViews.length; i++)

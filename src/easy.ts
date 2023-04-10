@@ -5,7 +5,7 @@ import { Hex, Utf8, Base64 } from "./enc/enc"
 
 const SALTsize = 8
 
-export function encrypt(plaintext: string, password: string){
+export function encrypt(plaintext: string, password: string): string{
 
 	let salt = new Random().bytes(SALTsize)
 
@@ -15,15 +15,16 @@ export function encrypt(plaintext: string, password: string){
 
 	encryptor.update(new Utf8().encode(plaintext))
 
-	let encrypted = encryptor.finalize()
+	let encrypted = encryptor.finalize(),
+		mac = encryptor.getMac()
 
 	return  new Hex().decode(salt) +
-			new Base64().decode(encrypted.data) +
-			new Hex().decode(encrypted.mac as Uint8Array)
+			new Base64().decode(encrypted) +
+			new Hex().decode(mac as Uint8Array)
 			
 }
 
-export function decrypt(ciphertext: string, password: string){
+export function decrypt(ciphertext: string, password: string): string{
 
 	let salt, cdata, mac
 
@@ -49,11 +50,11 @@ export function decrypt(ciphertext: string, password: string){
 	if(!decryptor.verify(mac))
 		throw "Invalid authentication"
 
-	return new Utf8().decode(decrypted.data)
+	return new Utf8().decode(decrypted)
 
 }
 
-export function hash(text: string){
+export function hash(text: string): string{
 
 	return new Hex().decode(
 		new Keccak800().update(
@@ -63,13 +64,13 @@ export function hash(text: string){
 
 }
 
-export function rsaGenerate(){
+export function rsaGenerate(): string{
 
 	return RSAKeyPair.generate(3072).toString()
 
 }
 
-export function rsaSign(message: string, privkeystr: string){
+export function rsaSign(message: string, privkeystr: string): string{
 
 	return new Base64().decode(
 		RSAKey.fromString(privkeystr).sign(
@@ -79,7 +80,7 @@ export function rsaSign(message: string, privkeystr: string){
 
 }
 
-export function rsaVerify(message: string, signature: string, pubkeystr: string){
+export function rsaVerify(message: string, signature: string, pubkeystr: string): boolean{
 
 	return RSAKey.fromString(pubkeystr).verify(
 		new Utf8().encode(message),
@@ -88,7 +89,7 @@ export function rsaVerify(message: string, signature: string, pubkeystr: string)
 
 }
 
-export function rsaEncrypt(message: string, pubkeystr: string){
+export function rsaEncrypt(message: string, pubkeystr: string): string{
 
 	let key = RSAKey.fromString(pubkeystr)
 
@@ -102,13 +103,14 @@ export function rsaEncrypt(message: string, pubkeystr: string){
 
 	encryptor.update(new Utf8().encode(message))
 
-	let encptx = encryptor.finalize()
+	let encptx = encryptor.finalize(),
+		encmac = encryptor.getMac()
 
-	return encsymkey + "|" + new Base64().decode(encptx.data) + new Hex().decode(encptx.mac as Uint8Array)
+	return encsymkey + "|" + new Base64().decode(encptx) + new Hex().decode(encmac as Uint8Array)
 
 }
 
-export function rsaDecrypt(message: string, privkeystr: string){
+export function rsaDecrypt(message: string, privkeystr: string): string{
 
 	let key: RSAKey, symkey, encptx, mac, splitted
 
@@ -130,16 +132,16 @@ export function rsaDecrypt(message: string, privkeystr: string){
 	symkey = key.decrypt(symkey)
 	let decryptor = new ChaCha20(symkey, true)
 	
-	encptx = decryptor.update(encptx).finalize()
+	let decptx = decryptor.update(encptx).finalize()
 
 	if(!decryptor.verify(mac))
 		throw "Invalid RSA message authentication code"
 
-	return new Utf8().decode(encptx.data)
+	return new Utf8().decode(decptx)
 
 }
 
-export function hmac(message: string, password: string){
+export function hmac(message: string, password: string): string{
 
 	return new Hex().decode(
 		new HMAC(

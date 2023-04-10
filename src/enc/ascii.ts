@@ -2,7 +2,7 @@ import encoding from "./encoding"
 
 export default class Ascii implements encoding {
 
-	encode(str: string){
+	encode(str: string): Uint8Array{
 
 		let bytes = new Uint8Array(str.length)
 
@@ -13,7 +13,7 @@ export default class Ascii implements encoding {
 
 	}
 
-	decode(bytes: ArrayBufferView){
+	decode(bytes: ArrayBufferView): string{
 
 		let bytearr = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 

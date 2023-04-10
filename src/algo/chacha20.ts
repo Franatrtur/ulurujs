@@ -57,7 +57,7 @@ export default class ChaCha20 implements algorithm {
 
 	}
 
-	constructor(key: ArrayBufferView, mac = true, nonce: ArrayBufferView = new Uint32Array(3), counter = 0){
+	constructor(key: ArrayBufferView, mac: boolean = true, nonce: ArrayBufferView = new Uint32Array(3), counter: number = 0){
 
 		this.state.set(CONSTS)
 		this.state.set(new Uint32Array(key.buffer, key.byteOffset, key.byteLength >> 2), 4)
@@ -84,7 +84,7 @@ export default class ChaCha20 implements algorithm {
 
 	}
 
-	public get counter(){
+	public get counter(): number{
 
 		return this.state[15]
 
@@ -146,7 +146,7 @@ export default class ChaCha20 implements algorithm {
 
 	}
 
-	private process(flush = false){
+	private process(flush: boolean = false){
 
 		let blocks = (flush ? Math.ceil : Math.floor)((this.sigBytes - this.pointer) / 16)
 
@@ -227,7 +227,7 @@ export default class ChaCha20 implements algorithm {
 
 	}
 
-	public verify(mac: ArrayBufferView){
+	public verify(mac: ArrayBufferView): boolean{
 
 		if(!this.doMac)
 			return
@@ -236,7 +236,7 @@ export default class ChaCha20 implements algorithm {
 
 	}
 
-	public update(data: string | ArrayBufferView){
+	public update(data: string | ArrayBufferView): this{
 
 		this.append(data)
 		this.process(false)
@@ -245,14 +245,11 @@ export default class ChaCha20 implements algorithm {
 
 	}
 
-	public finalize(){
+	public finalize(): Uint8Array{
 
 		this.process(true)
 
-		let result = {
-			data: new Uint8Array(this.data.buffer, 0, this.sigBytes),
-			mac: this.getMac()
-		}
+		let result = new Uint8Array(this.data.buffer, 0, this.sigBytes)
 
 		this.data = new Uint32Array(0)
 		this.pointer = 0

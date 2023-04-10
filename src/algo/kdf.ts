@@ -11,14 +11,14 @@ export default class KDF {
 	public outputBytes: number
 	public iterations: number
 
-	constructor(outputbytes = 32, iterations = 1000){
+	constructor(outputbytes: number = 32, iterations: number = 1000){
 
 		this.outputBytes = outputbytes
 		this.iterations = iterations
 		
 	}
 
-	public compute(password: ArrayBufferView | string, salt: ArrayBufferView = new Uint32Array(0)){
+	public compute(password: ArrayBufferView | string, salt: ArrayBufferView = new Uint32Array(0)): Uint8Array{
 
 		let result = new Uint8Array(this.outputBytes)
 		let block

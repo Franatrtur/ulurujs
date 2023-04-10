@@ -14,7 +14,7 @@ export default class RSAKeyPair {
 	public static publicPrefix = PUBLICprefix
 	public static privatePrefix = PRIVATEprefix
 
-	static fromString(str: string){
+	static fromString(str: string): RSAKeyPair{
 
 		return new this(
 			RSAKey.fromString(str.split(PUBLICprefix[0])[1].split(PUBLICprefix[1])[0]),
@@ -23,7 +23,7 @@ export default class RSAKeyPair {
 
 	}
 
-	static generate(bitlength: number = 3072){
+	static generate(bitlength: number = 3072): RSAKeyPair{
 
 		if(!bitlength)
 			return
@@ -32,7 +32,15 @@ export default class RSAKeyPair {
 
 		let E = PUBEXP
 
-		let prime1 = getPrime(bitlength), prime2 = getPrime(bitlength)
+		let prime1: bigint, prime2: bigint
+
+		do
+			prime1 = getPrime(bitlength)
+		while(prime1 % E == Bi(1)) //assert modular invertibility under phi(n)
+
+		do
+			prime2 = getPrime(bitlength)
+		while(prime2 % E == Bi(1) || prime2 == prime1) // prevent factorization to n = p*p
 
 		let N = prime1 * prime2
 		let phi = (prime1 - Bi(1)) * (prime2 - Bi(1))

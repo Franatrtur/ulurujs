@@ -2,7 +2,7 @@ import encoding from "./encoding"
 
 export default class Utf8 implements encoding {
 
-	encode(str: string){
+	encode(str: string): Uint8Array{
 
 		if(typeof TextEncoder == "function")
 			return new TextEncoder().encode(str)
@@ -49,7 +49,7 @@ export default class Utf8 implements encoding {
 
 	}
 
-	decode(bytes: ArrayBufferView){
+	decode(bytes: ArrayBufferView): string{
 
 		let byteArr = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 

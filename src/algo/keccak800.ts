@@ -90,7 +90,7 @@ export default class Keccak800 implements algorithm {
 
 	}
 
-	private keccakF(state){
+	private keccakF(state: Uint32Array){
 
 		let tempState = this.tempState,
 			theta = this.theta
@@ -131,7 +131,7 @@ export default class Keccak800 implements algorithm {
 
 	}
 
-	private process(flush = false){
+	private process(flush: boolean = false){
 
 		let blocks = (this.data.length - this.pointer) / 16
 
@@ -216,7 +216,7 @@ export default class Keccak800 implements algorithm {
 
 	}
 
-	public finalize(outputbytes = 32){
+	public finalize(outputbytes: number = 32): Uint8Array{
 
 		this.process(true)
 

@@ -6,13 +6,13 @@ import { Bi, buffviewToBi, biToBuffview, bitLength, modPow } from "./utils/bigin
 
 export default class RSAKey {
 
-	static fromBufferViews(bufferview1: ArrayBufferView, bufferview2: ArrayBufferView){
+	static fromBufferViews(bufferview1: ArrayBufferView, bufferview2: ArrayBufferView): RSAKey{
 
 		return new this(buffviewToBi(bufferview1), buffviewToBi(bufferview2))
 
 	}
 
-	static fromString(str: string){
+	static fromString(str: string): RSAKey{
 
 		let splitted = str.split("<")[1].split(">")[0].split("|")
 
@@ -40,7 +40,7 @@ export default class RSAKey {
 
 	}
 
-	private process(data: ArrayBufferView){
+	private process(data: ArrayBufferView): Uint8Array{
 
 		let dataBi = buffviewToBi(data)
 
@@ -51,7 +51,7 @@ export default class RSAKey {
 
 	}
 
-	public encrypt(data: ArrayBufferView | string){
+	public encrypt(data: ArrayBufferView | string): Uint8Array{
 
 		data = typeof data == "string" ? new Utf8().encode(data as string) : data
 
@@ -64,13 +64,13 @@ export default class RSAKey {
 
 	}
 
-	public decrypt(data: ArrayBufferView){
+	public decrypt(data: ArrayBufferView): Uint8Array{
 
 		return new OAEP().unpad(this.process(data))
 
 	}
 
-	public sign(data: ArrayBufferView | string){
+	public sign(data: ArrayBufferView | string): Uint8Array{
 
 		let hash = new Keccak800().update(data).finalize(64)
 
@@ -78,7 +78,7 @@ export default class RSAKey {
 
 	}
 
-	public verify(data: ArrayBufferView | string, signature: ArrayBufferView){
+	public verify(data: ArrayBufferView | string, signature: ArrayBufferView): boolean{
 
 		try{
 
