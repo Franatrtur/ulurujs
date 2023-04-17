@@ -26,8 +26,8 @@ export default class ChaCha20 implements algorithm {
 	private mask: Uint32Array = new Uint32Array(16)
 	
 	public doMac: boolean
-	private Cmac: Uint32Array | false
-	private Pmac: Uint32Array | false
+	private Cmac: Uint32Array
+	private Pmac: Uint32Array
 	
 	private data: Uint32Array | Uint8Array
 	public pointer: number
@@ -37,19 +37,14 @@ export default class ChaCha20 implements algorithm {
 
 		this.xstate.fill(0)
 
-		this.Pmac = this.Cmac = false
+		this.Pmac = new Uint32Array(4)
 
 		//add in the spreaded entropy to initialize the mac states
-		if(this.doMac){
-
-			this.Pmac = new Uint32Array(4)
-
+		if(this.doMac)
 			for(let i = 0; i < 16; i++)
 				this.Pmac[i & 3] ^= this.mask[i]
 
-			this.Cmac = this.Pmac.slice()
-
-		}
+		this.Cmac = this.Pmac.slice()
 
 		this.data = new Uint32Array(0)
 		this.pointer = 0
@@ -96,7 +91,7 @@ export default class ChaCha20 implements algorithm {
 
 	}
 
-	/**ChaCha mixing Quarter-round */
+	//ChaCha mixing Quarter-round
 	private QR(state: Uint32Array, A: number, B: number, C: number, D: number){
 
 		state[A] += state[B]
@@ -150,7 +145,7 @@ export default class ChaCha20 implements algorithm {
 
 		let blocks = (flush ? Math.ceil : Math.floor)((this.sigBytes - this.pointer) / 16)
 
-		let ptw, ctw
+		let ptw: number, ctw: number
 
 		let end = Math.ceil(this.sigBytes / 4) - 1
 		let erase = 4 - this.sigBytes % 4

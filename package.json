@@ -1,6 +1,6 @@
 {
   "name": "uluru-crypto",
-  "version": "4.1.3",
+  "version": "4.1.4",
   "description": "a lightweight cryptographic library designed to be simple to use",
   "main": "./dist/uluru-esm.mjs",
   "exports": {

@@ -186,7 +186,7 @@ export default class Keccak800 implements algorithm {
 			let newLength = (padSigBytes + data.byteLength) >> 6 << 6 // floor(len / 64) * 64
 			let overflow = (padSigBytes + data.byteLength) % 64
 
-			//optimization, use existing data buffer we can, useful for repeptitive updating
+			//optimization, use existing data buffer if we can, useful for repeptitive updating
 			this.data = this.data.byteLength > newLength ?
 				new Uint8Array(this.data.buffer, 0, newLength) :
 				new Uint8Array(newLength)

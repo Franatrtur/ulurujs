@@ -28,7 +28,8 @@ export default class RSAKeyPair {
 		if(!bitlength)
 			return
 
-		bitlength >>= 1
+		bitlength >>= 1 //primes are two times shorter than the bitlength of n
+		let closeShift = Bi(bitlength - 8) //for comparing first 8 bits of the primes
 
 		let E = PUBEXP
 
@@ -40,7 +41,7 @@ export default class RSAKeyPair {
 
 		do
 			prime2 = getPrime(bitlength)
-		while(prime2 % E == Bi(1) || prime2 == prime1) // prevent factorization to n = p*p
+		while(prime2 % E == Bi(1) || (prime2 >> closeShift) == (prime1 >> closeShift)) //p and q must not be close
 
 		let N = prime1 * prime2
 		let phi = (prime1 - Bi(1)) * (prime2 - Bi(1))
